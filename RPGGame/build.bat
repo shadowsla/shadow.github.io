@@ -27,10 +27,25 @@ REM Create bin directory if it doesn't exist
 echo Creating bin directory...
 if not exist bin mkdir bin
 
+REM Ensure script runs from the script directory
+pushd "%~dp0" >nul
+
 echo.
 color 0E
 echo Compiling Java source files...
-javac -d bin src\com\shadowrpg\*\*.java
+setlocal EnableDelayedExpansion
+set "SOURCES="
+for /R "%~dp0src" %%f in (*.java) do (
+    set "SOURCES=!SOURCES! ""%%f"""
+)
+if "%SOURCES%"=="" (
+    color 0C
+    echo ERROR: No Java source files found in src\
+    pause
+    exit /b 1
+)
+javac -d bin %SOURCES%
+endlocal
 
 if %ERRORLEVEL% EQU 0 (
     color 0A

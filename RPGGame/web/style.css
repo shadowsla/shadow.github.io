@@ -22,6 +22,68 @@ body {
     box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
 }
 
+/* Layout for new index.html */
+#gameContainer {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.gameArea { width: 100%; }
+.hero { position: relative; }
+
+#overlay {
+    position: absolute;
+    inset: 0; /* fill hero */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* allow canvas interactions once hidden */
+}
+.overlay-card {
+    pointer-events: auto;
+    background: linear-gradient(180deg, rgba(10,10,20,0.95), rgba(10,10,30,0.9));
+    border: 2px solid #00ff00;
+    padding: 28px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 680px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.overlay-card h1 { color: #00ff00; margin-bottom: 8px; font-size: 2.4em; }
+.overlay-card p { color: #ddd; margin-bottom: 18px; }
+.cta { display:flex; gap:12px; justify-content:center; }
+.start-btn, .tutorial-btn {
+    background: #00ff00;
+    color: #001;
+    border: none;
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.tutorial-btn { background: #ffaa00; color:#000; }
+
+.sideBar { display:flex; flex-direction:column; gap:16px; }
+
+/* Header */
+#siteHeader {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin: 10px auto;
+    max-width: 1400px;
+    color:#fff;
+    padding: 8px 20px;
+}
+.logo { font-weight:800; color:#00ff00; font-size:1.2rem; }
+.logo span { margin-left:8px; color:#fff; font-weight:700; }
+.mainNav { display:flex; gap:12px; }
+.navBtn { color:#00ff00; text-decoration:none; padding:6px 12px; border:1px solid rgba(0,255,0,0.15); border-radius:6px; }
+.navBtn:hover { background: rgba(0,255,0,0.06); }
+
 #gameHeader {
     text-align: center;
     margin-bottom: 20px;

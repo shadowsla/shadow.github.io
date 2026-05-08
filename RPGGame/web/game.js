@@ -516,7 +516,10 @@ function renderHUD() {
 }
 
 function closeTutorial() {
-    document.getElementById('tutorialPanel').style.display = 'none';
+    var panel = document.getElementById('tutorialPanel');
+    if (panel) panel.style.display = 'none';
+    var overlay = document.getElementById('overlay');
+    if (overlay) overlay.style.display = 'none';
     gameState = GAME_STATES.MAIN_MENU;
 }
 

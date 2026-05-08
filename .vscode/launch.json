@@ -4,7 +4,13 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
+        {
+            "type": "java",
+            "name": "Game",
+            "request": "launch",
+            "mainClass": "com.shadowrpg.core.Game",
+            "projectName": "shadow.github.io_9e6f55a5"
+        },
         {
             "type": "chrome",
             "request": "launch",

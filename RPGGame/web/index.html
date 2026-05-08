@@ -1,23 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow's Tower RPG - Play Online</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shadow's Tower RPG — Play Online</title>
     <link rel="stylesheet" href="style.css">
+    <meta name="description" content="Shadow's Tower — browser playable tower-climbing RPG." />
 </head>
 <body>
-    <div id="gameContainer">
-        <div id="gameHeader">
-            <h1>⚔️ SHADOW'S TOWER RPG ⚔️</h1>
-            <p>Tower Climbing Adventure</p>
-        </div>
+    <header id="siteHeader">
+        <div class="logo">⚔️ <span>Shadow's Tower</span></div>
+        <nav class="mainNav">
+            <a href="#" id="nav-play" class="navBtn">Play</a>
+            <a href="#tutorial" id="nav-tutorial" class="navBtn">Tutorial</a>
+            <a href="#" id="nav-credits" class="navBtn">Credits</a>
+        </nav>
+    </header>
 
-        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+    <main id="gameContainer">
+        <section class="gameArea">
+            <div class="hero">
+                <canvas id="gameCanvas" width="1280" height="720"></canvas>
+                <div id="overlay">
+                    <div class="overlay-card">
+                        <h1>SHADOW'S TOWER RPG</h1>
+                        <p>Climb towers, beat bosses, and become legend.</p>
+                        <div class="cta">
+                            <button class="start-btn" onclick="closeTutorial()">Start Game</button>
+                            <button class="tutorial-btn" onclick="openTutorial()">Open Tutorial</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <div id="gameInfo">
+        <aside class="sideBar">
             <div id="playerStats">
-                <h3>Player Stats</h3>
+                <h3>Player</h3>
                 <p>Rank: <span id="playerRank">F</span></p>
                 <p>HP: <span id="playerHP">100/100</span></p>
                 <p>Weapon: <span id="playerWeapon">Long Sword</span></p>
@@ -26,62 +45,61 @@
 
             <div id="gameControls">
                 <h3>Controls</h3>
-                <p><strong>Arrow Keys / WASD:</strong> Move</p>
-                <p><strong>Space:</strong> Attack</p>
-                <p><strong>I:</strong> Inventory</p>
-                <p><strong>G:</strong> Guild</p>
-                <p><strong>S:</strong> Skill Tree</p>
-                <p><strong>C:</strong> Crafting</p>
-                <p><strong>ESC:</strong> Menu</p>
+                <ul>
+                    <li><strong>Arrow / WASD</strong> — Move</li>
+                    <li><strong>Space</strong> — Attack</li>
+                    <li><strong>I</strong> — Inventory</li>
+                    <li><strong>G</strong> — Guild</li>
+                    <li><strong>S</strong> — Skill Tree</li>
+                    <li><strong>C</strong> — Crafting</li>
+                    <li><strong>ESC</strong> — Menu</li>
+                </ul>
             </div>
 
             <div id="towers">
-                <h3>Available Towers</h3>
+                <h3>Towers</h3>
                 <ul id="towerList">
-                    <li>1. Tower of Shadows (F Rank)</li>
-                    <li>2. Crimson Peak (E Rank)</li>
-                    <li>3. Frozen Abyss (D Rank)</li>
-                    <li>4. Inferno Citadel (C Rank)</li>
-                    <li>5. Mystic Spire (B Rank)</li>
-                    <li>6. Draconic Sanctum (A Rank)</li>
-                    <li>7. The Seventh Tower (S Rank) - Unlocked after completing all towers!</li>
+                    <li>1. Tower of Shadows (F)</li>
+                    <li>2. Crimson Peak (E)</li>
+                    <li>3. Frozen Abyss (D)</li>
+                    <li>4. Inferno Citadel (C)</li>
+                    <li>5. Mystic Spire (B)</li>
+                    <li>6. Draconic Sanctum (A)</li>
                 </ul>
             </div>
-        </div>
+        </aside>
 
         <div id="tutorialPanel" class="panel">
             <h2>Welcome to Shadow's Tower RPG</h2>
-            <p>This is an epic RPG where you climb through 6 towers, each with multiple floors and challenging enemies.</p>
-            
-            <h3>Game Features:</h3>
-            <ul>
-                <li>🎖️ 10 Player Ranks: F → E → D → C → B → A → S → SS → SSS → Z</li>
-                <li>⚔️ 15 Different Weapon Types with unique synchronization</li>
-                <li>🏰 6 Main Towers + 1 Secret 7th Tower</li>
-                <li>👹 Diverse enemies with AI movement and attacks</li>
-                <li>💼 Inventory system with item stacking</li>
-                <li>🛠️ Crafting system with NPC support</li>
-                <li>🌳 Skill trees for each weapon type</li>
-                <li>🎵 Dynamic music based on location</li>
-                <li>🛡️ Armor and equipment system</li>
-                <li>🎁 Rare loot drops from enemies</li>
-            </ul>
-
-            <h3>How to Play:</h3>
+            <p>This is an epic RPG where you climb through towers, defeat enemies and bosses, and craft gear.</p>
+            <h3>Quick Start</h3>
             <ol>
-                <li>Press ENTER to start</li>
-                <li>Select a tower with number keys (1-6)</li>
-                <li>Defeat enemies on each floor</li>
-                <li>Reach the boss at the top of the tower</li>
-                <li>Complete all 6 towers to unlock the 7th Tower</li>
-                <li>Rank up at the guild using experience</li>
-                <li>Use crafting system to improve gear</li>
-                <li>Master weapon skill trees to become stronger</li>
+                <li>Press <strong>ENTER</strong> to start</li>
+                <li>Select tower with keys 1—6</li>
+                <li>Defeat enemies on each floor to progress</li>
             </ol>
-
-            <button onclick="closeTutorial()">Start Game</button>
+            <button onclick="closeTutorial()">Play Now</button>
         </div>
-    </div>
+    </main>
+
+    <footer id="siteFooter">
+        <small>Run locally: <code>cd RPGGame/web &amp;&amp; python3 -m http.server 8000</code> — open <strong>http://localhost:8000</strong></small>
+    </footer>
+
+    <script>
+        function openTutorial() {
+            document.getElementById('tutorialPanel').style.display = 'block';
+        }
+        // existing closeTutorial is in game.js — keep it if present; fallback:
+        if (typeof closeTutorial !== 'function') {
+            function closeTutorial() {
+                document.getElementById('tutorialPanel').style.display = 'none';
+            }
+        }
+        // nav hooks
+        document.getElementById('nav-tutorial').addEventListener('click', function(e){ e.preventDefault(); openTutorial(); });
+        document.getElementById('nav-play').addEventListener('click', function(e){ e.preventDefault(); document.getElementById('overlay').style.display='none'; });
+    </script>
 
     <script src="game.js"></script>
     <script src="player.js"></script>

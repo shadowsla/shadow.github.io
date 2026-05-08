@@ -1,15 +1,12 @@
 package com.shadowrpg.core;
 
+import com.shadowrpg.audio.*;
 import com.shadowrpg.entities.*;
 import com.shadowrpg.systems.*;
-import com.shadowrpg.world.*;
 import com.shadowrpg.ui.*;
-import com.shadowrpg.audio.*;
-
-import javax.swing.*;
+import com.shadowrpg.world.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import javax.swing.*;
 
 /**
  * Main RPG Game Engine - Shadow's Tower RPG
@@ -35,7 +32,6 @@ public class Game extends JFrame {
     public Game() {
         setTitle("Shadow's Tower RPG - Tower Climbing Adventure");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(WIDTH, HEIGHT);
         setLocationRelativeTo(null);
         setResizable(false);
         setUndecorated(false);
@@ -54,40 +50,49 @@ public class Game extends JFrame {
         // Initialize player
         player = new Player("Adventurer", 100, 50, 1, 1, WeaponType.LONG_SWORD);
 
-        // Create game panel
+        // Create game panel and set up frame
         gamePanel = new GamePanel(this);
-        add(gamePanel);
-
+        setContentPane(gamePanel);
+        pack();
+        setSize(WIDTH, HEIGHT);
+        setLocationRelativeTo(null);
         setVisible(true);
+
+        // Ensure the game panel has focus for input
+        gamePanel.requestFocusInWindow();
+
         startGameLoop();
     }
 
     private void startGameLoop() {
-        new Thread(() -> {
-            long lastTime = System.nanoTime();
-            long frameCounter = 0;
-            long fpsTimer = System.currentTimeMillis();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long lastTime = System.nanoTime();
+                long frameCounter = 0;
+                long fpsTimer = System.currentTimeMillis();
 
-            while (true) {
-                long currentTime = System.nanoTime();
-                double deltaTime = (currentTime - lastTime) / 1_000_000_000.0;
-                lastTime = currentTime;
+                while (true) {
+                    long currentTime = System.nanoTime();
+                    double deltaTime = (currentTime - lastTime) / 1_000_000_000.0;
+                    lastTime = currentTime;
 
-                update(deltaTime);
-                gamePanel.repaint();
+                    update(deltaTime);
+                    gamePanel.repaint();
 
-                frameCounter++;
-                long elapsed = System.currentTimeMillis() - fpsTimer;
-                if (elapsed >= 1000) {
-                    gamePanel.setFPS((int) frameCounter);
-                    frameCounter = 0;
-                    fpsTimer = System.currentTimeMillis();
-                }
+                    frameCounter++;
+                    long elapsed = System.currentTimeMillis() - fpsTimer;
+                    if (elapsed >= 1000) {
+                        gamePanel.setFPS((int) frameCounter);
+                        frameCounter = 0;
+                        fpsTimer = System.currentTimeMillis();
+                    }
 
-                try {
-                    Thread.sleep(1000 / TARGET_FPS);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    try {
+                        Thread.sleep(1000 / TARGET_FPS);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }).start();
@@ -317,6 +322,19 @@ public class Game extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Game());
+        // If running in a headless environment (no display), exit with a helpful message
+        if (GraphicsEnvironment.isHeadless()) {
+            System.out.println("Headless environment detected. The game requires a graphical environment (X11/Wayland).\n"
+                    + "If you're on a Chromebook, run this in the Linux container with GUI support, or use the web version in a browser.\n"
+                    + "Exiting.");
+            return;
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new Game();
+            }
+        });
     }
 }

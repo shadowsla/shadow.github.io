@@ -16,6 +16,16 @@
 3. Type `y` when asked to run the game
 4. Game launches!
 
+#### Chromebook (Crostini) Users:
+1. Open the Linux terminal (Crostini) on your Chromebook
+2. Install OpenJDK if needed:
+```bash
+sudo apt update
+sudo apt install openjdk-17-jdk -y
+```
+3. From the `RPGGame` directory run: `bash build.sh`
+4. If you prefer the web version, serve the `web/` folder and open it in Chrome (see Web Version below).
+
 #### Manual Compilation:
 ```bash
 # Compile
@@ -30,6 +40,14 @@ java -cp bin com.shadowrpg.core.Game
 1. Open `RPGGame/web/index.html` with any modern browser
 2. Click "Start Game" button
 3. Follow on-screen instructions
+
+Tip: If the browser blocks local file access, serve the web folder with a simple HTTP server from the `RPGGame` directory:
+
+```bash
+# Python 3
+python3 -m http.server 8000
+# then open http://localhost:8000/web/ in your browser
+```
 
 ---
 

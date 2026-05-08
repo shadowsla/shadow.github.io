@@ -1,9 +1,9 @@
 package com.shadowrpg.core;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import javax.swing.*;
 
 /**
  * GamePanel - Main rendering and input handler
@@ -17,11 +17,23 @@ public class GamePanel extends JPanel {
 
     public GamePanel(Game game) {
         this.game = game;
+        // Preferred size must match game's constants
+        setPreferredSize(new Dimension(1280, 720));
         this.backBuffer = new BufferedImage(1280, 720, BufferedImage.TYPE_INT_RGB);
         this.backGraphics = backBuffer.createGraphics();
 
         setFocusable(true);
         setBackground(Color.BLACK);
+
+        // Ensure focusable and request focus when shown
+        addHierarchyListener(new java.awt.event.HierarchyListener() {
+            @Override
+            public void hierarchyChanged(java.awt.event.HierarchyEvent e) {
+                if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0 && isShowing()) {
+                    requestFocusInWindow();
+                }
+            }
+        });
 
         addKeyListener(new KeyListener() {
             @Override

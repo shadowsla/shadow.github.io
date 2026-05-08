@@ -1,0 +1,19 @@
+=========================================
+Shadow's Tower RPG - Build & Run Script
+=========================================
+
+[0;32mFound Java:[0m
+javac 25.0.2
+
+[1;33mCreating bin directory...[0m
+[1;33mCompiling Java source files...[0m
+[0;32mCompilation successful![0m
+
+[1;33mCreating executable JAR: ShadowRPG.jar[0m
+[0;32mCreated ShadowRPG.jar in /workspaces/shadow.github.io/RPGGame[0m
+Run with: java -jar /workspaces/shadow.github.io/RPGGame/ShadowRPG.jar
+Do you want to run the game now? (y/n) 
+[1;33mStarting Shadow's Tower RPG from JAR...[0m
+Headless environment detected. The game requires a graphical environment (X11/Wayland).
+If you're on a Chromebook, run this in the Linux container with GUI support, or use the web version in a browser.
+Exiting.
