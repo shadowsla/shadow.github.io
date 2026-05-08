@@ -6,6 +6,7 @@ import com.shadowrpg.systems.*;
 import com.shadowrpg.ui.*;
 import com.shadowrpg.world.*;
 import java.awt.*;
+import java.util.*;
 import javax.swing.*;
 
 /**
@@ -141,7 +142,46 @@ public class Game extends JFrame {
         player.update(deltaTime);
         enemyManager.update(deltaTime, player);
 
-        // Handle collisions and combat
+        // Handle player attacks against enemies (player can damage enemies)
+        if (player.getAttackState() != null) {
+            if (player.getAttackState().name().equals("ATTACKING")) {
+                java.util.List<Enemy> killed = new java.util.ArrayList<>();
+                for (Enemy enemy : new ArrayList<>(enemyManager.getEnemies())) {
+                    // compute distance between centers
+                    int px = player.getX() + player.getWidth() / 2;
+                    int py = player.getY() + player.getHeight() / 2;
+                    int ex = enemy.getX() + enemy.getWidth() / 2;
+                    int ey = enemy.getY() + enemy.getHeight() / 2;
+                    double dx = ex - px;
+                    double dy = ey - py;
+                    double dist2 = dx * dx + dy * dy;
+
+                    int range = getWeaponRange(player.getCurrentWeapon());
+                    if (dist2 <= (range * range)) {
+                        // damage formula: weapon base + level scaling + small sync bonus
+                        int base = player.getCurrentWeapon().getBaseDamage();
+                        int damage = base + player.getLevel() * 2 + (int) Math.round(player.getWeaponSync(player.getCurrentWeapon()) / 10.0);
+                        enemy.takeDamage(damage);
+                        if (!enemy.isAlive()) {
+                            killed.add(enemy);
+                            // award player
+                            player.gainExperience(enemy.getExperienceReward());
+                            // give gold to inventory system if present
+                            if (inventorySystem != null) inventorySystem.addGold(enemy.getGoldReward());
+                            // drop loot into inventory
+                            for (Item it : enemy.dropLoot()) {
+                                if (inventorySystem != null) inventorySystem.addItem(it);
+                            }
+                        }
+                    }
+                }
+                if (!killed.isEmpty()) {
+                    enemyManager.getEnemies().removeAll(killed);
+                }
+            }
+        }
+
+        // Handle collisions (enemies damaging player)
         for (Enemy enemy : enemyManager.getEnemies()) {
             if (player.isCollidingWith(enemy)) {
                 player.takeDamage(enemy.getDamage());
@@ -158,6 +198,16 @@ public class Game extends JFrame {
                 }
             }
         }
+    }
+
+    private int getWeaponRange(WeaponType weapon) {
+        if (weapon == null) return 80;
+        String n = weapon.getWeaponName().toLowerCase();
+        if (n.contains("spear") || n.contains("halberd") || n.contains("pole")) return 140;
+        if (n.contains("bow") || n.contains("crossbow")) return 450;
+        if (n.contains("dagger")) return 60;
+        if (n.contains("staff") || n.contains("wand") || n.contains("magic")) return 220;
+        return 90;
     }
 
     private void updateGuild() {
