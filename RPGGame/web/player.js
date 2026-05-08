@@ -133,6 +133,7 @@ function getPlayerStats() {
         gold: player.gold,
         armor: player.armor.defense,
         magicPower: player.magicPower || 0,
-        skills: (player.skills || []).map(s => ({ name: s.name, key: s.key }))
+        skills: (player.skills || []).map(s => ({ name: s.name, key: s.key })),
+        keyPieces: player.keyPieces || 0
     };
 }

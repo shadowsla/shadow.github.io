@@ -370,3 +370,34 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #00cc00;
 }
+
+/* Notification UI */
+.notification-container {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 2200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    align-items: flex-end;
+}
+.notification {
+    pointer-events: auto;
+    background: rgba(22,22,32,0.98);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+    font-size: 14px;
+    transform: translateY(-8px);
+    opacity: 0;
+    transition: transform .18s ease, opacity .18s ease;
+    max-width: 340px;
+}
+.notification.show { opacity: 1; transform: translateY(0); }
+.notification.success { background: linear-gradient(90deg,#66cc88,#2ecc71); color: #072; }
+.notification.info { background: linear-gradient(90deg,#5aa8ff,#3b8cff); color: #022; }
+.notification.warn { background: linear-gradient(90deg,#ffb86b,#ff7b36); color: #222; }
+.notification .close-btn { margin-left: 8px; cursor: pointer; color: rgba(255,255,255,0.9); }

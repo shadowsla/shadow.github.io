@@ -30,8 +30,9 @@
                         <h1>SHADOW'S TOWER RPG</h1>
                         <p>Climb towers, beat bosses, and become legend.</p>
                         <div class="cta">
-                            <button id="resume-btn" class="start-btn" style="display:none;" onclick="resumeSavedGame()">Resume</button>
-                            <button class="start-btn" onclick="openClassSelect()">Start Game</button>
+                                <button id="resume-btn" class="start-btn" style="display:none;" onclick="resumeSavedGame()">Resume</button>
+                                <input id="playerNameInput" type="text" placeholder="Enter character name" style="margin:8px 0;padding:8px;width:220px;border-radius:4px;border:1px solid #004411;display:block;margin-left:auto;margin-right:auto;" />
+                                <button class="start-btn" onclick="startNewGame()">Start Game</button>
                             <button class="tutorial-btn" onclick="openTutorial()">Open Tutorial</button>
                         </div>
                     </div>
@@ -48,6 +49,7 @@
                 <p>Magic: <span id="playerMagic">20</span></p>
                 <p>Skills: <span id="playerSkills">Fireball (Q), Heal (E), Whirlwind (R)</span></p>
                 <p>Gold: <span id="playerGold">0</span></p>
+                <p>Chamber Fragments: <span id="playerFragments">0</span></p>
             </div>
 
             <div id="gameControls">
@@ -159,6 +161,7 @@
     <script src="player.js"></script>
     <script src="enemy.js"></script>
     <script src="ui.js"></script>
+    <div id="notificationContainer" class="notification-container" aria-live="polite" aria-atomic="true"></div>
     <!-- Service worker registration for PWA support -->
     <script>
         if ('serviceWorker' in navigator) {

@@ -91,6 +91,48 @@ const POSSIBLE_DROPS = [
 // Items dropped on the ground
 let itemsOnGround = [];
 
+// Fallback data (in case external data not provided)
+if (typeof TOWERS === 'undefined') {
+    var TOWERS = [
+        { name: 'Tower of Shadows', floors: 100, difficulty: 1 },
+        { name: 'Crimson Peak', floors: 100, difficulty: 2 },
+        { name: 'Frozen Abyss', floors: 100, difficulty: 3 },
+        { name: 'Inferno Citadel', floors: 100, difficulty: 4 },
+        { name: 'Mystic Spire', floors: 100, difficulty: 5 },
+        { name: 'Draconic Sanctum', floors: 100, difficulty: 6 }
+    ];
+}
+
+if (typeof ENEMY_TYPES === 'undefined') {
+    var ENEMY_TYPES = [
+        { name: 'Goblin', health: 30, damage: 5, exp: 20 },
+        { name: 'Orc', health: 45, damage: 8, exp: 40 },
+        { name: 'Skeleton', health: 35, damage: 6, exp: 25 },
+        { name: 'Zombie', health: 50, damage: 9, exp: 50 },
+        { name: 'Demon', health: 80, damage: 15, exp: 120 },
+        { name: 'Dragonling', health: 120, damage: 25, exp: 350 }
+    ];
+}
+
+if (typeof WEAPON_TYPES === 'undefined') {
+    var WEAPON_TYPES = {
+        LONG_SWORD: { name: 'Long Sword', damage: 12, speed: 1.0 },
+        DAGGER: { name: 'Dagger', damage: 8, speed: 1.6 },
+        KATANA: { name: 'Katana', damage: 14, speed: 1.1 },
+        BOW: { name: 'Bow', damage: 10, speed: 1.2 },
+        STAFF: { name: 'Staff', damage: 8, speed: 0.9, magic: true },
+        AXE: { name: 'Axe', damage: 16, speed: 0.8 }
+    };
+}
+
+if (typeof AFFINITIES === 'undefined') {
+    var AFFINITIES = ['Arcane', 'Flame', 'Frost', 'Shadow', 'Nature'];
+}
+
+if (typeof PLAYER_RANKS === 'undefined') {
+    var PLAYER_RANKS = ['F','E','D','C','B','A','S'];
+}
+
 // Visual effects system (AOE rings, projectiles, hits, sparks, slash arcs)
 let effects = [];
 
@@ -254,6 +296,30 @@ function drawEffects(ctx) {
     }
 }
 
+// On-screen notification helper (non-blocking)
+function showNotification(message, type = 'info', duration = 3500) {
+    try {
+        const container = document.getElementById('notificationContainer');
+        if (!container) return;
+        const el = document.createElement('div');
+        el.className = 'notification ' + (type || 'info');
+        el.textContent = message;
+        // allow click to dismiss
+        el.addEventListener('click', function() {
+            el.classList.remove('show');
+            setTimeout(() => el.remove(), 220);
+        });
+        container.appendChild(el);
+        // animate in
+        requestAnimationFrame(() => el.classList.add('show'));
+        // auto dismiss
+        setTimeout(() => {
+            el.classList.remove('show');
+            setTimeout(() => { try { el.remove(); } catch(e){} }, 220);
+        }, duration);
+    } catch (e) { console.warn('Notification failed', e); }
+}
+
 // Class definitions (Tank, Healer, DPS, Rogue, Mage)
 const CLASS_DEFINITIONS = {
     TANK: {
@@ -339,6 +405,35 @@ function openClassSelect() {
 function closeClassSelect() {
     const panel = document.getElementById('classSelectPanel');
     if (panel) panel.style.display = 'none';
+}
+
+function startNewGame() {
+    const input = document.getElementById('playerNameInput');
+    if (input && input.value && input.value.trim()) {
+        player.name = input.value.trim();
+    }
+    const overlay = document.getElementById('overlay'); if (overlay) overlay.style.display = 'none';
+    openClassSelect();
+    updateSidebarUI();
+    saveGame();
+}
+
+function maybeAwardKeyPiece() {
+    const chance = 0.06; // 6% chance to find a fragment when entering a tower
+    if (Math.random() < chance) {
+        player.keyPieces = (player.keyPieces || 0) + 1;
+        addToInventory({ name: 'Chamber Fragment', quantity: 1, rarity: 2 });
+        saveGame();
+        updateSidebarUI();
+        if (player.keyPieces >= 10 && !seventhTowerSpawned) {
+            seventhTowerSpawned = true;
+            TOWERS.push({ name: 'Chamber of the Forgotten', floors: 100, difficulty: 8 });
+            showNotification('You have collected all Chamber Fragments — Chamber of the Forgotten unlocked!', 'success', 6000);
+        } else {
+            // small notice
+            showNotification('Found a Chamber Fragment (' + player.keyPieces + '/10)', 'info', 3500);
+        }
+    }
 }
 
 let _selectedClassKey = null;
@@ -464,11 +559,13 @@ function saveGame() {
         const save = {
             timestamp: Date.now(),
             player: {
+                name: player.name,
                 x: player.x, y: player.y, health: player.health, maxHealth: player.maxHealth,
                 mana: player.mana, maxMana: player.maxMana, level: player.level, rank: player.rank,
                 experience: player.experience, experienceToNextRank: player.experienceToNextRank,
                 gold: player.gold, inventory: player.inventory, currentWeaponKey: getWeaponKeyByName(player.currentWeapon.name),
-                className: player.className, affinity: player.affinity, unlockedClassSkills: player.unlockedClassSkills || [], appliedSkills: player.appliedSkills || {}
+                className: player.className, affinity: player.affinity, unlockedClassSkills: player.unlockedClassSkills || [], appliedSkills: player.appliedSkills || {},
+                keyPieces: player.keyPieces || 0
             },
             enemies: enemies.map(e => ({ x: e.x, y: e.y, width: e.width, height: e.height, health: e.health, maxHealth: e.maxHealth, damage: e.damage, experience: e.experience, velocityX: e.velocityX, velocityY: e.velocityY, attackTimer: e.attackTimer, attackCooldown: e.attackCooldown, type: e.type && e.type.name })),
             itemsOnGround: itemsOnGround,
@@ -491,6 +588,8 @@ function loadGame() {
         const save = JSON.parse(raw);
         if (!save || !save.player) return false;
         const p = save.player;
+        if (p.name) player.name = p.name;
+        player.keyPieces = p.keyPieces || player.keyPieces || 0;
         player.x = p.x || player.x; player.y = p.y || player.y;
         player.health = p.health || player.health; player.maxHealth = p.maxHealth || player.maxHealth;
         player.mana = p.mana || player.mana; player.maxMana = p.maxMana || player.maxMana;
@@ -525,7 +624,7 @@ function resumeSavedGame() {
         const wpanel = document.getElementById('weaponSelectPanel'); if (wpanel) wpanel.style.display = 'none';
         updateSidebarUI();
     } else {
-        alert('No saved game found.');
+        showNotification('No saved game found.', 'info', 3500);
     }
 }
 
@@ -556,6 +655,7 @@ let player = {
     armor: { defense: 10, maxHealthBonus: 0 },
     gold: 0,
     inventory: [],
+    keyPieces: 0,
     maxInventory: 50,
     velocityX: 0,
     velocityY: 0,
@@ -642,6 +742,8 @@ function selectTower(index) {
         currentTowerIndex = index;
         currentFloor = 1;
         gameState = GAME_STATES.TOWER_FLOOR;
+        // chance to award a chamber fragment when entering a tower
+        try { maybeAwardKeyPiece(); } catch(e) {}
         generateFloorEnemies();
     }
 }
@@ -653,46 +755,109 @@ function generateFloorEnemies() {
     enemies = [];
     const tower = TOWERS[currentTowerIndex];
     const enemyCount = 3 + currentFloor * 2;
-    
+
     for (let i = 0; i < enemyCount; i++) {
-        const enemyType = Math.floor(Math.random() * Math.min(3 + currentTowerIndex, ENEMY_TYPES.length));
-        const enemy = {
-            x: 150 + Math.random() * 1000,
-            y: 200 + Math.random() * 400,
-            width: 35,
-            height: 35,
-            type: ENEMY_TYPES[enemyType],
-            health: ENEMY_TYPES[enemyType].health + (currentFloor * 5) + (currentTowerIndex * 10),
-            maxHealth: ENEMY_TYPES[enemyType].health + (currentFloor * 5) + (currentTowerIndex * 10),
-            damage: ENEMY_TYPES[enemyType].damage + currentFloor + currentTowerIndex * 2,
-            experience: ENEMY_TYPES[enemyType].exp * (currentFloor + currentTowerIndex),
-            velocityX: (Math.random() - 0.5) * 2,
-            velocityY: (Math.random() - 0.5) * 2,
-            attackTimer: 0,
-            attackCooldown: 1.5
-        };
-        enemies.push(enemy);
+        const enemyTypeIndex = Math.floor(Math.random() * Math.min(3 + currentTowerIndex, ENEMY_TYPES.length));
+        const difficulty = currentFloor + currentTowerIndex;
+        const sx = 150 + Math.random() * 1000;
+        const sy = 200 + Math.random() * 400;
+        let en;
+        if (typeof createEnemy === 'function') {
+            en = createEnemy(ENEMY_TYPES[enemyTypeIndex], sx, sy, difficulty);
+        } else {
+            const base = ENEMY_TYPES[enemyTypeIndex];
+            en = {
+                x: sx,
+                y: sy,
+                width: 35,
+                height: 35,
+                type: base,
+                health: base.health + (difficulty * 5),
+                maxHealth: base.health + (difficulty * 5),
+                damage: base.damage + difficulty,
+                experience: (base.exp || 10) * difficulty,
+                velocityX: (Math.random() - 0.5) * 2,
+                velocityY: (Math.random() - 0.5) * 2,
+                attackTimer: 0,
+                attackCooldown: 1.5
+            };
+        }
+
+        en.level = difficulty;
+        en.displayName = (en.type && en.type.name) ? en.type.name : (en.name || 'Enemy');
+
+        // small chance to be an anomaly enemy (better drops and stats)
+        if (Math.random() < 0.04) {
+            en.isAnomaly = true;
+            en.displayName = 'Anomaly ' + en.displayName;
+            en.health = Math.round((en.health || en.maxHealth || 40) * 1.6);
+            en.maxHealth = en.health;
+            en.damage = Math.round((en.damage || 5) * 1.4);
+            // ensure some loot exists
+            if (!en.loot) {
+                if (typeof generateLoot === 'function') en.loot = generateLoot(en.type || ENEMY_TYPES[enemyTypeIndex], difficulty);
+                else en.loot = [{ name: 'Anomalous Relic', quantity: 1, rarity: 3 }];
+            }
+        }
+
+        enemies.push(en);
     }
-    
+
     // Add mini-boss every 3 floors
     if (currentFloor > 2 && currentFloor % 3 === 0) {
+        const bossBase = ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
         const miniBoss = {
             x: 600,
             y: 300,
             width: 50,
             height: 50,
-            type: { name: 'Mini Boss', health: 150, damage: 30, exp: 300 },
-            health: 150 + (currentFloor * 20) + (currentTowerIndex * 30),
-            maxHealth: 150 + (currentFloor * 20) + (currentTowerIndex * 30),
-            damage: 30 + currentFloor * 5 + currentTowerIndex * 5,
-            experience: 300 * (currentFloor + currentTowerIndex),
+            type: bossBase,
+            health: (bossBase.health || 80) * 2 + (currentFloor * 10) + (currentTowerIndex * 20),
+            maxHealth: (bossBase.health || 80) * 2 + (currentFloor * 10) + (currentTowerIndex * 20),
+            damage: (bossBase.damage || 10) * 2 + currentFloor * 2 + currentTowerIndex * 3,
+            experience: (bossBase.exp || 100) * 6 * (currentFloor + currentTowerIndex),
             velocityX: 0,
             velocityY: 0,
             attackTimer: 0,
             attackCooldown: 1.0,
-            isMiniBoss: true
+            isMiniBoss: true,
+            displayName: 'Mini Boss ' + (bossBase.name || 'Champion'),
+            level: currentFloor + currentTowerIndex
         };
+        // assign loot
+        if (typeof generateLoot === 'function') miniBoss.loot = generateLoot(bossBase, currentFloor);
         enemies.push(miniBoss);
+    }
+
+    // Spawn a boss on milestone floors (every 10th floor)
+    if (currentFloor % 10 === 0) {
+        let boss = null;
+        if (typeof spawnBoss === 'function') {
+            boss = spawnBoss(currentTowerIndex);
+        } else {
+            boss = {
+                name: 'Tower Guardian',
+                x: 640,
+                y: 360,
+                width: 90,
+                height: 90,
+                maxHealth: 300 + (currentFloor * 40),
+                health: 300 + (currentFloor * 40),
+                damage: 30 + currentFloor * 5,
+                experience: 1000 * (currentFloor + currentTowerIndex),
+                attackTimer: 0,
+                attackCooldown: 1.6,
+                isBoss: true,
+                displayName: 'Boss ' + (currentFloor),
+                level: currentFloor + currentTowerIndex
+            };
+        }
+        if (boss) {
+            boss.isBoss = true;
+            boss.displayName = boss.displayName || boss.name || 'Boss';
+            boss.level = boss.level || currentFloor + currentTowerIndex;
+            enemies.push(boss);
+        }
     }
 }
 
@@ -786,9 +951,20 @@ function update(deltaTime) {
             if (e.health <= 0) {
                 player.experience += e.experience || 0;
                 player.gold += Math.max(1, Math.floor((e.experience || 0) / 10));
-                // small death boom and drop
+                // small death boom
                 spawnEffect('boom', e.x + (e.width||0)/2, e.y + (e.height||0)/2, { radius: 24, color: 'rgba(255,140,60,0.8)', duration: 0.6 });
-                spawnDrop(e);
+                // drop configured loot if present
+                if (e.loot && e.loot.length) {
+                    for (let it of e.loot) {
+                        itemsOnGround.push({ x: e.x, y: e.y, name: it.name, desc: it.type || '', quantity: it.quantity || 1, rarity: it.rarity || 0 });
+                    }
+                } else {
+                    spawnDrop(e);
+                }
+                // anomaly guaranteed extra drop
+                if (e.isAnomaly) {
+                    itemsOnGround.push({ x: e.x, y: e.y, name: 'Anomaly Cache', desc: 'A strange cache dropped by an anomaly.', quantity: 1, rarity: 3 });
+                }
             } else {
                 survivors.push(e);
             }
@@ -809,9 +985,10 @@ function update(deltaTime) {
                 generateFloorEnemies();
             } else {
                 allTowersComplete = true;
-                if (!seventhTowerSpawned) {
+                // Seventh tower is unlocked by collecting 10 Chamber Fragments
+                if (!seventhTowerSpawned && player.keyPieces >= 10) {
                     seventhTowerSpawned = true;
-                    TOWERS.push({ name: 'The Seventh Tower', floors: 15, difficulty: 7 });
+                    TOWERS.push({ name: 'Chamber of the Forgotten', floors: 100, difficulty: 8 });
                 }
                 gameState = GAME_STATES.MAIN_MENU;
             }
@@ -1189,19 +1366,32 @@ function renderTower() {
     
     // Render enemies
     for (let enemy of enemies) {
-        ctx.fillStyle = '#ff4444';
+        // Enemy body
+        ctx.fillStyle = (enemy.isBoss || enemy.isMiniBoss) ? '#aa2222' : (enemy.isAnomaly ? '#ff88aa' : '#ff4444');
         ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-        ctx.strokeStyle = '#ffff00';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = enemy.isBoss ? '#ffd700' : '#ffff00';
+        ctx.lineWidth = enemy.isBoss ? 3 : 2;
         ctx.strokeRect(enemy.x, enemy.y, enemy.width, enemy.height);
-        
+
+        // Name and level above enemy
+        try {
+            const prefix = enemy.isBoss ? '[Boss] ' : (enemy.isMiniBoss ? '[Mini] ' : (enemy.isAnomaly ? '[Anomaly] ' : ''));
+            const nameText = prefix + (enemy.displayName || (enemy.type && enemy.type.name) || 'Enemy');
+            const levelText = 'Lv ' + (enemy.level || currentFloor);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(levelText, enemy.x + enemy.width/2, enemy.y - 22);
+            ctx.fillText(nameText, enemy.x + enemy.width/2, enemy.y - 10);
+        } catch (e) {}
+
         // Enemy health bar
         const barWidth = 40;
         const barHeight = 4;
         ctx.fillStyle = '#333333';
         ctx.fillRect(enemy.x - 2, enemy.y - 10, barWidth, barHeight);
         ctx.fillStyle = '#ff0000';
-        const healthWidth = (enemy.health / enemy.maxHealth) * barWidth;
+        const healthWidth = (enemy.health / (enemy.maxHealth || 1)) * barWidth;
         ctx.fillRect(enemy.x - 2, enemy.y - 10, healthWidth, barHeight);
     }
 
@@ -1358,6 +1548,8 @@ function updateSidebarUI() {
     if (elMagic) elMagic.textContent = player.magicPower || 0;
     const elSkills = document.getElementById('playerSkills');
     if (elSkills) elSkills.textContent = player.skills.map(s => s.name + ' (' + s.key + ')').join(', ');
+    const elFragments = document.getElementById('playerFragments');
+    if (elFragments) elFragments.textContent = player.keyPieces || 0;
 }
 
 function isFullscreen() {
@@ -1448,6 +1640,21 @@ window.addEventListener('load', () => {
         const resumeBtn = document.getElementById('resume-btn');
         if (resumeBtn) {
             if (localStorage.getItem(SAVE_KEY)) resumeBtn.style.display = 'inline-block'; else resumeBtn.style.display = 'none';
+        }
+    } catch (e) {}
+
+    // Pre-fill name input from saved game if available
+    try {
+        const nameInput = document.getElementById('playerNameInput');
+        if (nameInput) {
+            const raw = localStorage.getItem(SAVE_KEY);
+            if (raw) {
+                const saved = JSON.parse(raw);
+                if (saved && saved.player && saved.player.name) nameInput.value = saved.player.name;
+                else nameInput.value = player.name || '';
+            } else {
+                nameInput.value = player.name || '';
+            }
         }
     } catch (e) {}
 
