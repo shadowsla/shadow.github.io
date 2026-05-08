@@ -161,6 +161,37 @@ body {
     max-width: none;
 }
 
+/* Fullscreen layout adjustments */
+#gameContainer.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    margin: 0;
+    border-radius: 0;
+    padding: 10px;
+    background: linear-gradient(135deg, #000000, #001a00);
+    grid-template-columns: 1fr !important;
+}
+
+#gameContainer.fullscreen .sideBar {
+    display: none !important;
+}
+
+#gameContainer.fullscreen .hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+#gameContainer.fullscreen #gameCanvas {
+    max-width: none;
+    max-height: none;
+}
+
 #gameInfo {
     display: grid;
     grid-template-columns: 1fr 1fr 2fr;

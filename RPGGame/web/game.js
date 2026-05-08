@@ -666,6 +666,68 @@ function updateSidebarUI() {
     if (elSkills) elSkills.textContent = player.skills.map(s => s.name + ' (' + s.key + ')').join(', ');
 }
 
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function enterFullscreen() {
+    const el = document.getElementById('gameContainer') || document.documentElement;
+    if (!el) return;
+    if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+    } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+    } else if (el.mozRequestFullScreen) {
+        el.mozRequestFullScreen();
+    } else if (el.msRequestFullscreen) {
+        el.msRequestFullscreen();
+    }
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+}
+
+function toggleFullscreen() {
+    if (isFullscreen()) exitFullscreen(); else enterFullscreen();
+}
+
+function fitCanvasToViewport() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const scale = Math.min(vw / BASE_WIDTH, vh / BASE_HEIGHT);
+    const w = Math.round(BASE_WIDTH * scale);
+    const h = Math.round(BASE_HEIGHT * scale);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.style.display = 'block';
+    canvas.style.margin = 'auto';
+}
+
+document.addEventListener('fullscreenchange', function() {
+    const container = document.getElementById('gameContainer');
+    const fsBtn = document.getElementById('nav-fullscreen');
+    if (isFullscreen()) {
+        if (container) container.classList.add('fullscreen');
+        document.documentElement.style.overflow = 'hidden';
+        fitCanvasToViewport();
+        if (fsBtn) fsBtn.textContent = 'Exit Fullscreen';
+    } else {
+        if (container) container.classList.remove('fullscreen');
+        document.documentElement.style.overflow = '';
+        resizeCanvas();
+        if (fsBtn) fsBtn.textContent = 'Fullscreen';
+    }
+}, false);
+
 function closeTutorial() {
     var panel = document.getElementById('tutorialPanel');
     if (panel) panel.style.display = 'none';
@@ -678,6 +740,10 @@ function closeTutorial() {
 window.addEventListener('load', () => {
     resizeCanvas();
     setupMobileControls();
-    window.addEventListener('resize', resizeCanvas);
+    const fsBtn = document.getElementById('nav-fullscreen');
+    if (fsBtn) {
+        fsBtn.addEventListener('click', function(e){ e.preventDefault(); toggleFullscreen(); });
+    }
+    window.addEventListener('resize', function() { if (isFullscreen()) fitCanvasToViewport(); else resizeCanvas(); });
     gameLoop();
 });
