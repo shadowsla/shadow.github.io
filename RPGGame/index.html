@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shadow's Tower RPG — Play Online</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#001a00">
+    <meta name="description" content="Shadow's Tower — browser playable tower-climbing RPG." />
+</head>
+<body>
+    <header id="siteHeader">
+        <div class="logo">⚔️ <span>Shadow's Tower</span></div>
+        <nav class="mainNav">
+            <a href="#" id="nav-play" class="navBtn">Play</a>
+            <a href="#tutorial" id="nav-tutorial" class="navBtn">Tutorial</a>
+            <a href="#" id="nav-fullscreen" class="navBtn">Fullscreen</a>
+            <a href="#" id="nav-stats" class="navBtn">Stats</a>
+            <a href="#" id="nav-inventory" class="navBtn">Inventory</a>
+            <a href="#" id="nav-skilltree" class="navBtn">Skill Tree</a>
+            <a href="#" id="nav-crafting" class="navBtn">Crafting</a>
+            <a href="#" id="nav-guild" class="navBtn">Guild</a>
+            <a href="#" id="nav-credits" class="navBtn">Credits</a>
+        </nav>
+    </header>
+
+    <main id="gameContainer">
+        <section class="gameArea">
+            <div class="hero">
+                <canvas id="gameCanvas" width="1280" height="720"></canvas>
+                <div id="overlay">
+                    <div class="overlay-card">
+                        <h1>SHADOW'S TOWER RPG</h1>
+                        <p>Climb towers, beat bosses, and become legend.</p>
+                        <div class="cta">
+                                <button id="resume-btn" class="start-btn" style="display:none;" onclick="resumeSavedGame()">Resume</button>
+                                <input id="playerNameInput" type="text" placeholder="Enter character name" style="margin:8px 0;padding:8px;width:220px;border-radius:4px;border:1px solid #004411;display:block;margin-left:auto;margin-right:auto;" />
+                                <button class="start-btn" onclick="startNewGame()">Start Game</button>
+                            <button class="tutorial-btn" onclick="openTutorial()">Open Tutorial</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="sideBar">
+            <div id="playerStats">
+                <h3>Player</h3>
+                <p>Rank: <span id="playerRank">F</span></p>
+                <p>HP: <span id="playerHP">100/100</span></p>
+                <p>Weapon: <span id="playerWeapon">Long Sword</span></p>
+                <p>Magic: <span id="playerMagic">20</span></p>
+                <p>Skills: <span id="playerSkills">Fireball (Q), Heal (E), Whirlwind (R)</span></p>
+                <p>Gold: <span id="playerGold">0</span></p>
+                <p>Chamber Fragments: <span id="playerFragments">0</span></p>
+            </div>
+
+            <div id="gameControls">
+                <h3>Controls</h3>
+                <ul>
+                    <li><strong>Arrow / WASD</strong> — Move</li>
+                    <li><strong>Space</strong> — Attack</li>
+                    <li><strong>Q / E / R</strong> — Skills</li>
+                    <li><strong>I</strong> — Inventory</li>
+                    <li><strong>G</strong> — Guild</li>
+                    <li><strong>S</strong> — Skill Tree</li>
+                    <li><strong>C</strong> — Crafting</li>
+                    <li><strong>ESC</strong> — Menu</li>
+                </ul>
+            </div>
+
+            <div id="towers">
+                <h3>Towers</h3>
+                <ul id="towerList">
+                    <li>1. Tower of Shadows (F)</li>
+                    <li>2. Crimson Peak (E)</li>
+                    <li>3. Frozen Abyss (D)</li>
+                    <li>4. Inferno Citadel (C)</li>
+                    <li>5. Mystic Spire (B)</li>
+                    <li>6. Draconic Sanctum (A)</li>
+                </ul>
+            </div>
+        </aside>
+
+        <div id="tutorialPanel" class="panel">
+            <h2>Welcome to Shadow's Tower RPG</h2>
+            <p>This is an epic RPG where you climb through towers, defeat enemies and bosses, and craft gear.</p>
+            <h3>Quick Start</h3>
+            <ol>
+                <li>Press <strong>ENTER</strong> to start</li>
+                <li>Select tower with keys 1—6</li>
+                <li>Defeat enemies on each floor to progress</li>
+            </ol>
+            <button onclick="closeTutorial()">Play Now</button>
+        </div>
+
+        <div id="weaponSelectPanel" class="panel">
+            <h2>Choose Your Starting Weapon</h2>
+            <p>Select a weapon to begin — this determines your starting skills.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;">
+                <button onclick="selectStartingWeapon('LONG_SWORD')" class="navBtn">Long Sword</button>
+                <button onclick="selectStartingWeapon('DAGGER')" class="navBtn">Dagger</button>
+                <button onclick="selectStartingWeapon('KATANA')" class="navBtn">Katana</button>
+                <button onclick="selectStartingWeapon('BOW')" class="navBtn">Bow</button>
+                <button onclick="selectStartingWeapon('STAFF')" class="navBtn">Staff</button>
+                <button onclick="selectStartingWeapon('AXE')" class="navBtn">Axe</button>
+                <button onclick="selectStartingWeapon('RANDOM')" class="navBtn">Random</button>
+                <button onclick="closeWeaponSelect()" class="navBtn">Cancel</button>
+            </div>
+        </div>
+
+        <div id="classSelectPanel" class="panel">
+            <h2>Choose Your Class</h2>
+            <p>Pick a class — each has unique strengths and class-only skills.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
+                <button onclick="showClassDetails('TANK')" class="navBtn">Tank</button>
+                <button onclick="showClassDetails('HEALER')" class="navBtn">Healer</button>
+                <button onclick="showClassDetails('DPS')" class="navBtn">DPS</button>
+                <button onclick="showClassDetails('ROGUE')" class="navBtn">Rogue</button>
+                <button onclick="showClassDetails('MAGE')" class="navBtn">Mage</button>
+                <button onclick="showClassDetails('RANDOM')" class="navBtn">Random</button>
+            </div>
+            <div id="classDetails" style="margin-top:14px;padding:8px;border-top:1px solid rgba(0,255,0,0.06);">
+                <h3 id="className">Class</h3>
+                <p id="classDesc">Select a class to see details.</p>
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;">
+                    <button id="confirmClassBtn" onclick="confirmClassSelection()" class="navBtn">Confirm</button>
+                    <button onclick="closeClassSelect()" class="navBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="itemPanel" class="panel">
+            <h2 id="itemName">Item</h2>
+            <p id="itemDesc">Description</p>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button id="pickupBtn" class="navBtn">Pick Up</button>
+                <button onclick="closeItemPanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+
+        <div id="inventoryPanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Inventory</h2>
+            <div id="inventoryList" style="max-height:50vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeInventoryPanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+
+        <div id="skillTreePanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Skill Tree</h2>
+            <div id="skillTreeContent" style="max-height:60vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeSkillTreePanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+
+        <div id="craftingPanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Crafting</h2>
+            <div id="craftingList" style="max-height:60vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeCraftingPanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+
+        <div id="guildPanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Guild</h2>
+            <div id="guildContent" style="max-height:50vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeGuildPanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+    </main>
+
+    <footer id="siteFooter">
+        <small>Run locally: <code>cd RPGGame/web &amp;&amp; python3 -m http.server 8000</code> — open <strong>http://localhost:8000</strong></small>
+    </footer>
+
+    <script>
+        function openTutorial() {
+            document.getElementById('tutorialPanel').style.display = 'block';
+        }
+        // existing closeTutorial is in game.js — keep it if present; fallback:
+        if (typeof closeTutorial !== 'function') {
+            function closeTutorial() {
+                document.getElementById('tutorialPanel').style.display = 'none';
+            }
+        }
+        // nav hooks
+        document.getElementById('nav-tutorial').addEventListener('click', function(e){ e.preventDefault(); openTutorial(); });
+        document.getElementById('nav-play').addEventListener('click', function(e){ e.preventDefault(); document.getElementById('overlay').style.display='none'; });
+        document.getElementById('nav-stats').addEventListener('click', function(e){ e.preventDefault(); if (typeof toggleStatsPanel === 'function') toggleStatsPanel(); });
+        // New panel hooks — use safe callers in case modules load later
+        const safeCall = (fnName) => { return function(e){ e.preventDefault(); try { if (typeof window[fnName] === 'function') window[fnName](); else showNotification && showNotification(fnName + ' loading...', 'info', 1000); } catch(err) { console.warn(err); } }; };
+        const inv = document.getElementById('nav-inventory'); if (inv) inv.addEventListener('click', safeCall('openInventoryPanel'));
+        const st = document.getElementById('nav-skilltree'); if (st) st.addEventListener('click', safeCall('openSkillTreePanel'));
+        const cr = document.getElementById('nav-crafting'); if (cr) cr.addEventListener('click', safeCall('openCraftingPanel'));
+        const gu = document.getElementById('nav-guild'); if (gu) gu.addEventListener('click', safeCall('openGuildPanel'));
+    </script>
+
+    <script src="game.js"></script>
+    <script src="player.js"></script>
+    <script src="enemy.js"></script>
+    <script src="ui.js"></script>
+    <script src="inventory.js"></script>
+    <script src="skilltree.js"></script>
+    <script src="crafting.js"></script>
+    <script src="guild.js"></script>
+    <div id="notificationContainer" class="notification-container" aria-live="polite" aria-atomic="true"></div>
+    <!-- Service worker registration for PWA support -->
+    <script>
+        // Service worker: unregister during local development to avoid stale caches.
+        if ('serviceWorker' in navigator) {
+            const hostname = location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+                // Unregister any existing SWs when developing locally
+                navigator.serviceWorker.getRegistrations().then(function(regs){
+                    regs.forEach(r => { r.unregister().then(function(){ console.log('Unregistered old service worker'); }); });
+                }).catch(() => {});
+            } else {
+                navigator.serviceWorker.register('sw.js')
+                .then(function(reg){ console.log('ServiceWorker registered:', reg.scope); })
+                .catch(function(err){ console.warn('ServiceWorker registration failed:', err); });
+            }
+        }
+    </script>
+
+    <!-- Mobile touch controls (shown on small screens) -->
+    <div id="mobileControls" class="mobile-controls" aria-hidden="false">
+        <div class="dpad">
+            <button id="btn-up" class="mc-btn">↑</button>
+            <div class="dpad-row">
+                <button id="btn-left" class="mc-btn">◀</button>
+                <button id="btn-down" class="mc-btn">↓</button>
+                <button id="btn-right" class="mc-btn">▶</button>
+            </div>
+        </div>
+        <div class="action">
+            <button id="btn-attack" class="mc-btn attack">⚔</button>
+        </div>
+    </div>
+</body>
+</html>

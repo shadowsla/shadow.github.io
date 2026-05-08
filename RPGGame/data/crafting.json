@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Healing Potion",
+    "materials": [ { "name": "Herb", "quantity": 3 }, { "name": "Water", "quantity": 1 } ],
+    "result": { "name": "Healing Potion", "quantity": 1 }
+  },
+  {
+    "name": "Mana Potion",
+    "materials": [ { "name": "Mana Crystal", "quantity": 2 }, { "name": "Water", "quantity": 1 } ],
+    "result": { "name": "Mana Potion", "quantity": 1 }
+  },
+  {
+    "name": "Iron Sword",
+    "materials": [ { "name": "Metal Scrap", "quantity": 5 }, { "name": "Coal", "quantity": 2 } ],
+    "result": { "name": "Iron Sword", "quantity": 1 }
+  },
+  {
+    "name": "Steel Armor",
+    "materials": [ { "name": "Metal Scrap", "quantity": 8 }, { "name": "Leather", "quantity": 3 } ],
+    "result": { "name": "Steel Armor", "quantity": 1 }
+  }
+]

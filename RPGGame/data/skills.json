@@ -1,0 +1,32 @@
+{
+  "LONG_SWORD": [
+    { "key": "Q", "name": "Slash", "type": "damage", "power": 30, "cooldown": 1.2, "radius": 60 },
+    { "key": "E", "name": "Heavy Strike", "type": "damage", "power": 65, "cooldown": 6 },
+    { "key": "R", "name": "Blade Dance", "type": "aoe", "power": 45, "cooldown": 10, "radius": 100 }
+  ],
+  "DAGGER": [
+    { "key": "Q", "name": "Quick Stab", "type": "damage", "power": 18, "cooldown": 0.8 },
+    { "key": "E", "name": "Backstab", "type": "damage", "power": 50, "cooldown": 7 },
+    { "key": "R", "name": "Shadow Step", "type": "buff", "power": 0, "cooldown": 12 }
+  ],
+  "KATANA": [
+    { "key": "Q", "name": "Iai Slash", "type": "damage", "power": 35, "cooldown": 1.2 },
+    { "key": "E", "name": "Wind Cut", "type": "aoe", "power": 40, "cooldown": 8, "radius": 90 },
+    { "key": "R", "name": "Blade Fury", "type": "aoe", "power": 70, "cooldown": 12, "radius": 120 }
+  ],
+  "BOW": [
+    { "key": "Q", "name": "Piercing Shot", "type": "ranged", "power": 28, "cooldown": 1.4, "range": 500 },
+    { "key": "E", "name": "Rain of Arrows", "type": "aoe", "power": 40, "cooldown": 10, "radius": 140 },
+    { "key": "R", "name": "Snipe", "type": "ranged", "power": 80, "cooldown": 12, "range": 700 }
+  ],
+  "STAFF": [
+    { "key": "Q", "name": "Magic Bolt", "type": "damage", "power": 22, "cooldown": 1.0, "magic": true },
+    { "key": "E", "name": "Heal", "type": "heal", "power": 60, "cooldown": 8 },
+    { "key": "R", "name": "Arcane Storm", "type": "aoe", "power": 70, "cooldown": 12, "radius": 140, "magic": true }
+  ],
+  "AXE": [
+    { "key": "Q", "name": "Cleave", "type": "damage", "power": 36, "cooldown": 1.6, "radius": 50 },
+    { "key": "E", "name": "Stomp", "type": "aoe", "power": 55, "cooldown": 9, "radius": 100 },
+    { "key": "R", "name": "Berserk", "type": "buff", "power": 0, "cooldown": 14 }
+  ]
+}

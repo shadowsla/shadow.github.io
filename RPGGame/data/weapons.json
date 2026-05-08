@@ -1,0 +1,15 @@
+{
+  "LONG_SWORD": { "name": "Long Sword", "damage": 12, "speed": 1.0 },
+  "DAGGER": { "name": "Dagger", "damage": 8, "speed": 1.6 },
+  "KATANA": { "name": "Katana", "damage": 14, "speed": 1.1 },
+  "BOW": { "name": "Bow", "damage": 10, "speed": 1.2 },
+  "STAFF": { "name": "Staff", "damage": 8, "speed": 0.9, "magic": true },
+  "AXE": { "name": "Axe", "damage": 16, "speed": 0.8 },
+  "HALBERD": { "name": "Halberd", "damage": 18, "speed": 0.75 },
+  "SPEAR": { "name": "Spear", "damage": 13, "speed": 1.0 },
+  "SHORT_SWORD": { "name": "Short Sword", "damage": 10, "speed": 1.3 },
+  "WARHAMMER": { "name": "Warhammer", "damage": 22, "speed": 0.6 },
+  "CROSSBOW": { "name": "Crossbow", "damage": 14, "speed": 0.9 },
+  "WAND": { "name": "Wand", "damage": 6, "speed": 1.4, "magic": true },
+  "SCEPTER": { "name": "Scepter", "damage": 9, "speed": 1.0, "magic": true }
+}
