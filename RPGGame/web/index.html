@@ -135,6 +135,38 @@
                 <button onclick="closeItemPanel()" class="navBtn">Close</button>
             </div>
         </div>
+
+        <div id="inventoryPanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Inventory</h2>
+            <div id="inventoryList" style="max-height:50vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeInventoryPanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+
+        <div id="skillTreePanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Skill Tree</h2>
+            <div id="skillTreeContent" style="max-height:60vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeSkillTreePanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+
+        <div id="craftingPanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Crafting</h2>
+            <div id="craftingList" style="max-height:60vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeCraftingPanel()" class="navBtn">Close</button>
+            </div>
+        </div>
+
+        <div id="guildPanel" class="panel" role="dialog" aria-hidden="true">
+            <h2>Guild</h2>
+            <div id="guildContent" style="max-height:50vh;overflow:auto;padding:6px 8px;"></div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;">
+                <button onclick="closeGuildPanel()" class="navBtn">Close</button>
+            </div>
+        </div>
     </main>
 
     <footer id="siteFooter">
@@ -161,6 +193,10 @@
     <script src="player.js"></script>
     <script src="enemy.js"></script>
     <script src="ui.js"></script>
+    <script src="inventory.js"></script>
+    <script src="skilltree.js"></script>
+    <script src="crafting.js"></script>
+    <script src="guild.js"></script>
     <div id="notificationContainer" class="notification-container" aria-live="polite" aria-atomic="true"></div>
     <!-- Service worker registration for PWA support -->
     <script>

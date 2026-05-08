@@ -71,13 +71,17 @@
 - [x] Synchronization-based rewards
 
 ### ✅ User Interface
-- [x] Main menu with options
-- [x] Tower selection interface
-- [x] In-game HUD with player stats
-- [x] Inventory management UI
-- [x] Skill tree visualization
-- [x] Guild ranking display
-- [x] Crafting interface
+
+### ✅ Web UI Enhancements (2026-05-08)
+
+- **Added DOM panels and modules** to improve the browser experience and make UI features accessible without relying solely on canvas overlays:
+   - web/inventory.js — DOM inventory panel with Use / Drop actions and keyboard shortcut `I`
+   - web/skilltree.js — Skill tree UI with unlock buttons and keyboard shortcut `S`
+   - web/crafting.js — Crafting UI that lists recipes and provides Craft actions (keyboard `C`)
+   - web/guild.js — Guild panel showing rank/progress and a promotion request action (keyboard `G`)
+   - `web/index.html` updated to include the new panels and load the additional scripts after `ui.js`.
+
+These additions scaffold the DOM-based UI for inventory, skill trees, crafting, and guild interaction so the web build exposes those systems more directly.
 
 ### ✅ Audio System
 - [x] Music manager with context awareness

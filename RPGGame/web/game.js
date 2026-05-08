@@ -7,6 +7,17 @@ const ctx = canvas.getContext('2d');
 const BASE_WIDTH = 1280;
 const BASE_HEIGHT = 720;
 
+// Game state enum
+const GAME_STATES = {
+    MAIN_MENU: 'MAIN_MENU',
+    TOWER_SELECTION: 'TOWER_SELECTION',
+    TOWER_FLOOR: 'TOWER_FLOOR',
+    INVENTORY: 'INVENTORY',
+    SKILL_TREE: 'SKILL_TREE',
+    GUILD: 'GUILD',
+    CRAFTING: 'CRAFTING'
+};
+
 function resizeCanvas() {
     // Keep internal resolution fixed to BASE_* and let CSS scale the canvas
     canvas.width = BASE_WIDTH;
