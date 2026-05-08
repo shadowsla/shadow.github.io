@@ -14,9 +14,17 @@ jobs:
           fetch-depth: 0
 
       - name: Deploy RPGGame/web to gh-pages
+        run: |
+          set -e
+          # Prepare a temporary folder where the site will contain a 'RPGGame' subfolder
+          rm -rf ghpages || true
+          mkdir -p ghpages/RPGGame
+          cp -r RPGGame/web/* ghpages/RPGGame/
+          ls -la ghpages/RPGGame | sed -n '1,40p'
+
+      - name: Deploy prepared site to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./RPGGame/web
-          # keep history minimal
+          publish_dir: ./ghpages
           publish_branch: gh-pages
