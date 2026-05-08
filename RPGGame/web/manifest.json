@@ -1,0 +1,21 @@
+{
+  "name": "Shadow's Tower RPG",
+  "short_name": "ShadowTower",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#001a00",
+  "theme_color": "#00ff00",
+  "description": "Shadow's Tower — browser playable tower-climbing RPG.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

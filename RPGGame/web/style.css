@@ -13,7 +13,7 @@ body {
 }
 
 #gameContainer {
-    max-width: 1400px;
+    max-width: 1800px;
     margin: 0 auto;
     background: rgba(0, 0, 0, 0.7);
     border: 3px solid #00ff00;
@@ -25,7 +25,7 @@ body {
 /* Layout for new index.html */
 #gameContainer {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 3fr 1fr;
     gap: 20px;
     align-items: start;
 }
@@ -74,7 +74,7 @@ body {
     justify-content:space-between;
     align-items:center;
     margin: 10px auto;
-    max-width: 1400px;
+    max-width: 1800px;
     color:#fff;
     padding: 8px 20px;
 }
@@ -83,6 +83,45 @@ body {
 .mainNav { display:flex; gap:12px; }
 .navBtn { color:#00ff00; text-decoration:none; padding:6px 12px; border:1px solid rgba(0,255,0,0.15); border-radius:6px; }
 .navBtn:hover { background: rgba(0,255,0,0.06); }
+
+/* Mobile control buttons */
+.mobile-controls {
+    position: fixed;
+    left: 14px;
+    bottom: 18px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    z-index: 1200;
+    pointer-events: auto;
+}
+.mobile-controls .dpad { display:flex; flex-direction:column; gap:8px; }
+.mobile-controls .dpad-row { display:flex; gap:8px; }
+.mc-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 12px;
+    border: 2px solid rgba(0,255,0,0.2);
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+.mc-btn.attack { background: linear-gradient(180deg,#ff6b6b,#ff3b3b); color:#fff; border-color: rgba(255,100,100,0.2); }
+
+/* Only show mobile controls on small screens */
+@media (min-width: 801px) {
+    .mobile-controls { display: none; }
+}
+
+@media (max-width: 800px) {
+    #gameContainer { grid-template-columns: 1fr; }
+    .sideBar { display: none; }
+    canvas#gameCanvas { width: 100% !important; height: auto !important; }
+}
 
 #gameHeader {
     text-align: center;
@@ -114,6 +153,12 @@ body {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+}
+/* Allow canvas to scale to available area without forcing the sidebar to shrink too much */
+#gameCanvas {
+    width: 100%;
+    height: auto;
+    max-width: none;
 }
 
 #gameInfo {

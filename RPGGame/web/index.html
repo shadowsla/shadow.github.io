@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Shadow's Tower RPG — Play Online</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#001a00">
     <meta name="description" content="Shadow's Tower — browser playable tower-climbing RPG." />
 </head>
 <body>
@@ -40,6 +42,8 @@
                 <p>Rank: <span id="playerRank">F</span></p>
                 <p>HP: <span id="playerHP">100/100</span></p>
                 <p>Weapon: <span id="playerWeapon">Long Sword</span></p>
+                <p>Magic: <span id="playerMagic">20</span></p>
+                <p>Skills: <span id="playerSkills">Fireball (Q), Heal (E), Whirlwind (R)</span></p>
                 <p>Gold: <span id="playerGold">0</span></p>
             </div>
 
@@ -48,6 +52,7 @@
                 <ul>
                     <li><strong>Arrow / WASD</strong> — Move</li>
                     <li><strong>Space</strong> — Attack</li>
+                    <li><strong>Q / E / R</strong> — Skills</li>
                     <li><strong>I</strong> — Inventory</li>
                     <li><strong>G</strong> — Guild</li>
                     <li><strong>S</strong> — Skill Tree</li>
@@ -105,5 +110,28 @@
     <script src="player.js"></script>
     <script src="enemy.js"></script>
     <script src="ui.js"></script>
+    <!-- Service worker registration for PWA support -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(function(reg){ console.log('ServiceWorker registered:', reg.scope); })
+            .catch(function(err){ console.warn('ServiceWorker registration failed:', err); });
+        }
+    </script>
+
+    <!-- Mobile touch controls (shown on small screens) -->
+    <div id="mobileControls" class="mobile-controls" aria-hidden="false">
+        <div class="dpad">
+            <button id="btn-up" class="mc-btn">↑</button>
+            <div class="dpad-row">
+                <button id="btn-left" class="mc-btn">◀</button>
+                <button id="btn-down" class="mc-btn">↓</button>
+                <button id="btn-right" class="mc-btn">▶</button>
+            </div>
+        </div>
+        <div class="action">
+            <button id="btn-attack" class="mc-btn attack">⚔</button>
+        </div>
+    </div>
 </body>
 </html>

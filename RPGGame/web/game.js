@@ -3,6 +3,51 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Logical canvas size (game coordinate system)
+const BASE_WIDTH = 1280;
+const BASE_HEIGHT = 720;
+
+function resizeCanvas() {
+    // Keep internal resolution fixed to BASE_* and let CSS scale the canvas
+    canvas.width = BASE_WIDTH;
+    canvas.height = BASE_HEIGHT;
+    // Ensure canvas fills its container responsively
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+}
+
+function getCanvasPos(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    const y = (clientY - rect.top) * (canvas.height / rect.height);
+    return { x: x, y: y };
+}
+
+function setMobileKey(name, down) {
+    switch (name) {
+        case 'left': keys['ArrowLeft'] = down; keys['a'] = down; break;
+        case 'right': keys['ArrowRight'] = down; keys['d'] = down; break;
+        case 'up': keys['ArrowUp'] = down; keys['w'] = down; break;
+        case 'down': keys['ArrowDown'] = down; keys['s'] = down; break;
+        case 'attack': if (down) player.isAttacking = true; break;
+    }
+}
+
+function setupMobileControls() {
+    const ids = ['up','down','left','right','attack'];
+    ids.forEach(id => {
+        const el = document.getElementById('btn-' + id);
+        if (!el) return;
+        el.addEventListener('touchstart', function(e) { e.preventDefault(); setMobileKey(id, true); }, { passive: false });
+        el.addEventListener('touchend', function(e) { e.preventDefault(); setMobileKey(id, false); }, { passive: false });
+        el.addEventListener('mousedown', function(e) { e.preventDefault(); setMobileKey(id, true); });
+        el.addEventListener('mouseup', function(e) { e.preventDefault(); setMobileKey(id, false); });
+        el.addEventListener('mouseleave', function(e) { setMobileKey(id, false); });
+    });
+}
+
 // Game constants
 const GAME_STATES = {
     MAIN_MENU: 'main_menu',
@@ -19,14 +64,22 @@ const GAME_STATES = {
 const WEAPON_TYPES = {
     SHORT_SWORD: { name: 'Short Sword', damage: 15, speed: 1.0 },
     LONG_SWORD: { name: 'Long Sword', damage: 25, speed: 1.2 },
+    KATANA: { name: 'Katana', damage: 28, speed: 1.3 },
     SPEAR: { name: 'Spear', damage: 20, speed: 1.1 },
+    HALBERD: { name: 'Halberd', damage: 32, speed: 0.85 },
     GAUNTLETS: { name: 'Gauntlets', damage: 12, speed: 0.9 },
     BOW: { name: 'Bow', damage: 18, speed: 1.3 },
+    CROSSBOW: { name: 'Crossbow', damage: 24, speed: 1.1 },
     AXE: { name: 'Axe', damage: 30, speed: 0.8 },
+    BATTLEAXE: { name: 'Battle Axe', damage: 36, speed: 0.7 },
     SCYTHE: { name: 'Scythe', damage: 28, speed: 1.0 },
     WARHAMMER: { name: 'War Hammer', damage: 35, speed: 0.7 },
     DAGGER: { name: 'Dagger', damage: 10, speed: 1.5 },
-    MACE: { name: 'Mace', damage: 22, speed: 0.9 }
+    MACE: { name: 'Mace', damage: 22, speed: 0.9 },
+    WHIP: { name: 'Whip', damage: 16, speed: 1.2 },
+    STAFF: { name: 'Staff', damage: 12, speed: 1.1, magic: true },
+    WAND: { name: 'Wand', damage: 10, speed: 1.6, magic: true },
+    SCEPTER: { name: 'Scepter', damage: 14, speed: 1.0, magic: true }
 };
 
 const PLAYER_RANKS = [
@@ -86,6 +139,13 @@ let player = {
     attackTimer: 0,
     attackDirection: { x: 1, y: 0 }
 };
+// Add magic and skills
+player.magicPower = 20; // increases skill damage
+player.skills = [
+    { name: 'Fireball', key: 'Q', cooldown: 5, lastUsed: -9999, type: 'damage', power: 70, radius: 120 },
+    { name: 'Heal', key: 'E', cooldown: 8, lastUsed: -9999, type: 'heal', power: 60 },
+    { name: 'Whirlwind', key: 'R', cooldown: 10, lastUsed: -9999, type: 'aoe', power: 45, radius: 80 }
+];
 
 // Input handling
 const keys = {};
@@ -131,6 +191,13 @@ function handleKeyPress(key) {
             if (gameState === GAME_STATES.TOWER_FLOOR) {
                 player.isAttacking = true;
             }
+            break;
+        case 'Q': case 'E': case 'R':
+            // Skill keys (Q/E/R) when in a tower floor
+            if (gameState === GAME_STATES.TOWER_FLOOR) {
+                castSkillByKey(key);
+            }
+            break;
             break;
     }
 }
@@ -275,6 +342,20 @@ function update(deltaTime) {
             }
         }
     }
+        // Remove defeated enemies and award rewards
+        if (enemies.length > 0) {
+            let survivors = [];
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.health <= 0) {
+                    player.experience += e.experience || 0;
+                    player.gold += Math.max(1, Math.floor((e.experience || 0) / 10));
+                } else {
+                    survivors.push(e);
+                }
+            }
+            enemies = survivors;
+        }
     
     // Check if all enemies defeated
     if (gameState === GAME_STATES.TOWER_FLOOR && enemies.length === 0) {
@@ -304,6 +385,44 @@ function isColliding(rect1, rect2) {
            rect1.x + rect1.width > rect2.x &&
            rect1.y < rect2.y + rect2.height &&
            rect1.y + rect1.height > rect2.y;
+}
+
+// Skill handling
+function castSkillByKey(key) {
+    const idx = player.skills.findIndex(s => s.key === key.toUpperCase());
+    if (idx >= 0) castSkill(idx);
+}
+
+function castSkill(index) {
+    const skill = player.skills[index];
+    if (!skill) return;
+    const now = Date.now() / 1000;
+    if (now - (skill.lastUsed || 0) < skill.cooldown) {
+        // still on cooldown
+        return;
+    }
+    skill.lastUsed = now;
+
+    switch (skill.type) {
+        case 'damage':
+        case 'aoe':
+            const radius = skill.radius || 80;
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                const dx = (e.x + e.width/2) - (player.x + player.width/2);
+                const dy = (e.y + e.height/2) - (player.y + player.height/2);
+                const dist2 = dx*dx + dy*dy;
+                if (dist2 <= radius*radius) {
+                    e.health -= (skill.power || 20) + (player.magicPower || 0);
+                }
+            }
+            break;
+        case 'heal':
+            player.health = Math.min(player.maxHealth, player.health + (skill.power || 30));
+            break;
+        default:
+            break;
+    }
 }
 
 function render() {
@@ -508,11 +627,43 @@ function renderHUD() {
     
     // Weapon info
     ctx.fillText('Weapon: ' + player.currentWeapon.name, 10, 150);
+
+    // Magic info
+    ctx.fillText('Magic: ' + (player.magicPower || 0), 10, 170);
+
+    // Skills (Q/E/R)
+    const nowSec = Date.now() / 1000;
+    let skillY = 190;
+    for (let i = 0; i < player.skills.length; i++) {
+        const s = player.skills[i];
+        const cdLeft = Math.max(0, Math.ceil(s.cooldown - (nowSec - (s.lastUsed || -9999))));
+        const status = cdLeft > 0 ? (`${cdLeft}s`) : 'Ready';
+        ctx.fillText(`${s.key}: ${s.name} (${status})`, 10, skillY);
+        skillY += 18;
+    }
     
     // FPS
     ctx.fillStyle = '#00ff00';
     ctx.textAlign = 'right';
     ctx.fillText('FPS: ' + fps, canvas.width - 20, 25);
+
+    // Update HTML sidebar values if present
+    updateSidebarUI();
+}
+
+function updateSidebarUI() {
+    const elHP = document.getElementById('playerHP');
+    if (elHP) elHP.textContent = Math.round(player.health) + '/' + player.maxHealth;
+    const elRank = document.getElementById('playerRank');
+    if (elRank) elRank.textContent = PLAYER_RANKS[player.rank];
+    const elWeapon = document.getElementById('playerWeapon');
+    if (elWeapon) elWeapon.textContent = player.currentWeapon.name;
+    const elGold = document.getElementById('playerGold');
+    if (elGold) elGold.textContent = player.gold;
+    const elMagic = document.getElementById('playerMagic');
+    if (elMagic) elMagic.textContent = player.magicPower || 0;
+    const elSkills = document.getElementById('playerSkills');
+    if (elSkills) elSkills.textContent = player.skills.map(s => s.name + ' (' + s.key + ')').join(', ');
 }
 
 function closeTutorial() {
@@ -525,5 +676,8 @@ function closeTutorial() {
 
 // Start game loop
 window.addEventListener('load', () => {
+    resizeCanvas();
+    setupMobileControls();
+    window.addEventListener('resize', resizeCanvas);
     gameLoop();
 });

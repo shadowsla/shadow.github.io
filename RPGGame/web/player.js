@@ -122,6 +122,8 @@ function getPlayerStats() {
         weapon: player.currentWeapon.name,
         weaponSync: getWeaponSync().toFixed(1),
         gold: player.gold,
-        armor: player.armor.defense
+        armor: player.armor.defense,
+        magicPower: player.magicPower || 0,
+        skills: (player.skills || []).map(s => ({ name: s.name, key: s.key }))
     };
 }
