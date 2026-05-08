@@ -91,6 +91,169 @@ const POSSIBLE_DROPS = [
 // Items dropped on the ground
 let itemsOnGround = [];
 
+// Visual effects system (AOE rings, projectiles, hits, sparks, slash arcs)
+let effects = [];
+
+function spawnEffect(type, x, y, opts) {
+    opts = opts || {};
+    const effect = {
+        id: Date.now() + Math.random(),
+        type: type,
+        x: x,
+        y: y,
+        elapsed: 0,
+        duration: opts.duration || 0.8,
+        color: opts.color || 'rgba(255,255,255,0.9)',
+        maxRadius: opts.radius || opts.maxRadius || 48,
+        power: opts.power || 0,
+        speed: opts.speed || 600,
+        vx: opts.vx || 0,
+        vy: opts.vy || 0,
+        targetX: opts.targetX,
+        targetY: opts.targetY,
+        meta: opts.meta || {}
+    };
+
+    // Setup projectile velocity if needed
+    if (type === 'projectile' && (effect.targetX != null && effect.targetY != null)) {
+        const dx = effect.targetX - effect.x;
+        const dy = effect.targetY - effect.y;
+        const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+        effect.vx = (dx / dist) * effect.speed;
+        effect.vy = (dy / dist) * effect.speed;
+        // duration equals time to target
+        effect.duration = dist / effect.speed;
+    }
+
+    // Small spark particles can be spawned via multiple 'spark' effects
+    if (type === 'spark') {
+        effect.vx = opts.vx !== undefined ? opts.vx : (Math.random() - 0.5) * 300;
+        effect.vy = opts.vy !== undefined ? opts.vy : (Math.random() - 0.5) * 300;
+        effect.duration = opts.duration || 0.4;
+        effect.radius = opts.radius || 3;
+    }
+
+    effects.push(effect);
+    return effect;
+}
+
+function updateEffects(dt) {
+    for (let i = effects.length - 1; i >= 0; i--) {
+        const e = effects[i];
+        e.elapsed += dt;
+
+        if (e.type === 'projectile') {
+            e.x += e.vx * dt;
+            e.y += e.vy * dt;
+            // collision with enemies
+            for (let j = 0; j < enemies.length; j++) {
+                const en = enemies[j];
+                const ex = en.x + (en.width || 16) / 2;
+                const ey = en.y + (en.height || 16) / 2;
+                const dx = ex - e.x;
+                const dy = ey - e.y;
+                const d2 = dx*dx + dy*dy;
+                const hitRadius = Math.max(12, (en.width + en.height) / 4);
+                if (d2 <= hitRadius * hitRadius) {
+                    // apply damage once
+                    const damage = Math.max(1, Math.floor((e.power || 10) + (player.magicPower || 0)));
+                    en.health = Math.max(0, en.health - damage);
+                    // spawn hit and sparks
+                    spawnEffect('hit', ex, ey, { radius: 12, color: 'rgba(255,180,60,0.95)', duration: 0.45 });
+                    for (let s = 0; s < 6; s++) {
+                        spawnEffect('spark', ex, ey, { vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200, color: 'rgba(255,200,120,0.9)', duration: 0.35 });
+                    }
+                    // hit effects (drop will be handled when enemy is removed)
+                    e.elapsed = e.duration + 0.001; // mark expired
+                    break;
+                }
+            }
+        } else if (e.type === 'spark') {
+            // simple physics
+            e.x += (e.vx || 0) * dt;
+            e.y += (e.vy || 0) * dt;
+            // gravity-ish
+            e.vy = (e.vy || 0) + 600 * dt;
+        }
+
+        if (e.elapsed >= e.duration) {
+            effects.splice(i, 1);
+        }
+    }
+}
+
+function drawEffects(ctx) {
+    for (let e of effects) {
+        const p = Math.min(1, Math.max(0, e.elapsed / (e.duration || 0.0001)));
+        if (e.type === 'aoe') {
+            const r = (e.maxRadius || 48) * p;
+            const alpha = 1 - p;
+            ctx.save();
+            const grad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, r);
+            grad.addColorStop(0, e.color || 'rgba(255,120,60,0.6)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+            ctx.fill();
+            // ring
+            ctx.strokeStyle = (e.color || 'rgba(255,120,60,0.8)');
+            ctx.globalAlpha = Math.max(0.15, alpha);
+            ctx.lineWidth = Math.max(2, 6 * (1 - p));
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        } else if (e.type === 'hit' || e.type === 'boom') {
+            const r = (e.maxRadius || 12) * (1 + p*0.6);
+            ctx.fillStyle = e.color || 'rgba(255,200,80,' + (1 - p) + ')';
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (e.type === 'projectile') {
+            // draw a streak and a projectile head
+            const tailLen = Math.max(8, Math.sqrt((e.vx||0)*(e.vx||0) + (e.vy||0)*(e.vy||0)) * 0.02);
+            const prevX = e.x - (e.vx||0) * 0.02;
+            const prevY = e.y - (e.vy||0) * 0.02;
+            ctx.strokeStyle = e.color || 'rgba(200,200,255,0.9)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(prevX, prevY);
+            ctx.lineTo(e.x, e.y);
+            ctx.stroke();
+            ctx.fillStyle = e.color || 'rgba(255,255,255,0.95)';
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, 6, 0, Math.PI*2);
+            ctx.fill();
+        } else if (e.type === 'spark') {
+            const alpha = 1 - p;
+            ctx.fillStyle = e.color || 'rgba(255,220,120,' + alpha + ')';
+            const r = e.radius || 2;
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (e.type === 'slash') {
+            // arc wedge based on meta.direction
+            const dir = e.meta.dir || { x: 1, y: 0 };
+            const cx = e.x;
+            const cy = e.y;
+            const angle = Math.atan2(dir.y, dir.x);
+            const radius = e.maxRadius || 80;
+            const spread = e.meta.spread || Math.PI / 3;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(angle);
+            ctx.fillStyle = e.color || 'rgba(255,160,80,' + (1 - p) + ')';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, radius * (1 - p*0.2), -spread/2, spread/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+}
+
 // Class definitions (Tank, Healer, DPS, Rogue, Mage)
 const CLASS_DEFINITIONS = {
     TANK: {
@@ -613,20 +776,25 @@ function update(deltaTime) {
             }
         }
     }
-        // Remove defeated enemies and award rewards
-        if (enemies.length > 0) {
-            let survivors = [];
-            for (let i = 0; i < enemies.length; i++) {
-                const e = enemies[i];
-                if (e.health <= 0) {
-                    player.experience += e.experience || 0;
-                    player.gold += Math.max(1, Math.floor((e.experience || 0) / 10));
-                } else {
-                    survivors.push(e);
-                }
+    // Update effects (projectiles, sparks)
+    updateEffects(deltaTime);
+    // Remove defeated enemies and award rewards
+    if (enemies.length > 0) {
+        let survivors = [];
+        for (let i = 0; i < enemies.length; i++) {
+            const e = enemies[i];
+            if (e.health <= 0) {
+                player.experience += e.experience || 0;
+                player.gold += Math.max(1, Math.floor((e.experience || 0) / 10));
+                // small death boom and drop
+                spawnEffect('boom', e.x + (e.width||0)/2, e.y + (e.height||0)/2, { radius: 24, color: 'rgba(255,140,60,0.8)', duration: 0.6 });
+                spawnDrop(e);
+            } else {
+                survivors.push(e);
             }
-            enemies = survivors;
         }
+        enemies = survivors;
+    }
     
     // Check if all enemies defeated
     if (gameState === GAME_STATES.TOWER_FLOOR && enemies.length === 0) {
@@ -685,11 +853,35 @@ function castSkill(index) {
                 const dist2 = dx*dx + dy*dy;
                 if (dist2 <= radius*radius) {
                     e.health -= (skill.power || 20) + (player.magicPower || 0);
+                    // small hit spark on enemy
+                    spawnEffect('hit', e.x + e.width/2, e.y + e.height/2, { radius: 10, color: 'rgba(255,160,60,0.95)', duration: 0.35 });
+                    for (let s = 0; s < 4; s++) spawnEffect('spark', e.x + e.width/2, e.y + e.height/2, { vx: (Math.random()-0.5)*180, vy: (Math.random()-0.5)*180, color: 'rgba(255,200,120,0.9)', duration: 0.25 });
                 }
+            }
+            // visual AOE pulse at player center
+            spawnEffect('aoe', player.x + player.width/2, player.y + player.height/2, { radius: radius, color: skill.magic ? 'rgba(120,180,255,0.45)' : 'rgba(255,120,60,0.45)', power: skill.power, duration: 0.9 });
+            break;
+        case 'ranged':
+            // Spawn a projectile toward nearest enemy or in facing direction
+            const range = skill.range || 400;
+            const pcx = player.x + player.width/2, pcy = player.y + player.height/2;
+            let target = null; let minD = Infinity;
+            for (let i = 0; i < enemies.length; i++) {
+                const en = enemies[i];
+                const ex = en.x + en.width/2, ey = en.y + en.height/2;
+                const dx = ex - pcx, dy = ey - pcy; const d2 = dx*dx + dy*dy;
+                if (d2 <= range*range && d2 < minD) { minD = d2; target = en; }
+            }
+            if (target) {
+                spawnEffect('projectile', pcx, pcy, { targetX: target.x + target.width/2, targetY: target.y + target.height/2, speed: 800, color: 'rgba(200,220,255,0.95)', power: skill.power });
+            } else {
+                const dir = player.attackDirection || { x: 1, y: 0 };
+                spawnEffect('projectile', pcx, pcy, { targetX: pcx + (dir.x||1)*range, targetY: pcy + (dir.y||0)*range, speed: 800, color: 'rgba(200,220,255,0.95)', power: skill.power });
             }
             break;
         case 'heal':
             player.health = Math.min(player.maxHealth, player.health + (skill.power || 30));
+            spawnEffect('aoe', player.x + player.width/2, player.y + player.height/2, { radius: 48, color: 'rgba(120,255,180,0.45)', duration: 0.8 });
             break;
         default:
             break;
@@ -712,6 +904,7 @@ function performAttack() {
     const range = getWeaponRange(weapon);
     const px = player.x + player.width / 2;
     const py = player.y + player.height / 2;
+    let hitAny = false;
     for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
         const ex = e.x + e.width / 2;
@@ -757,10 +950,15 @@ function performAttack() {
                         damage = Math.floor(damage * (player.backstabMultiplier || 2.0));
                     }
                 }
-
                 e.health = Math.max(0, e.health - damage);
+                hitAny = true;
+                spawnEffect('hit', ex, ey, { radius: 10, color: 'rgba(255,160,60,0.95)', duration: 0.35 });
+                for (let s = 0; s < 4; s++) spawnEffect('spark', ex, ey, { vx: (Math.random()-0.5)*160, vy: (Math.random()-0.5)*160, color: 'rgba(255,200,120,0.9)', duration: 0.28 });
             }
         }
+    }
+    if (hitAny) {
+        spawnEffect('slash', px, py, { maxRadius: range, color: 'rgba(255,160,80,0.9)', meta: { dir: player.attackDirection || { x: 1, y: 0 }, spread: Math.PI/3 }, duration: 0.35 });
     }
 }
 
@@ -937,6 +1135,9 @@ function render() {
             break;
     }
     
+    // World effects (projectiles, aoe visuals)
+    if (typeof drawEffects === 'function') drawEffects(ctx);
+
     // Render HUD
     renderHUD();
     // Draw UI overlays (inventory, skill tree, guild, crafting, stats)
