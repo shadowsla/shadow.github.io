@@ -47,62 +47,324 @@ function setupMobileControls() {
         el.addEventListener('mouseleave', function(e) { setMobileKey(id, false); });
     });
 }
-
-// Game constants
-const GAME_STATES = {
-    MAIN_MENU: 'main_menu',
-    TOWER_SELECTION: 'tower_selection',
-    TOWER_FLOOR: 'tower_floor',
-    GUILD: 'guild',
-    CRAFTING: 'crafting',
-    INVENTORY: 'inventory',
-    SKILL_TREE: 'skill_tree',
-    BOSS_BATTLE: 'boss_battle',
-    PAUSE: 'pause'
+const WEAPON_SKILLS_MAP = {
+    LONG_SWORD: [
+        { key: 'Q', name: 'Slash', type: 'damage', power: 30, cooldown: 1.5, radius: 60 },
+        { key: 'E', name: 'Heavy Strike', type: 'damage', power: 60, cooldown: 6 },
+        { key: 'R', name: 'Blade Dance', type: 'aoe', power: 45, cooldown: 10, radius: 100 }
+    ],
+    DAGGER: [
+        { key: 'Q', name: 'Quick Stab', type: 'damage', power: 18, cooldown: 0.8 },
+        { key: 'E', name: 'Backstab', type: 'damage', power: 50, cooldown: 7 },
+        { key: 'R', name: 'Shadow Step', type: 'buff', power: 0, cooldown: 12 }
+    ],
+    KATANA: [
+        { key: 'Q', name: 'Iai Slash', type: 'damage', power: 35, cooldown: 1.2 },
+        { key: 'E', name: 'Wind Cut', type: 'aoe', power: 40, cooldown: 8, radius: 90 },
+        { key: 'R', name: 'Blade Fury', type: 'aoe', power: 70, cooldown: 12, radius: 120 }
+    ],
+    BOW: [
+        { key: 'Q', name: 'Piercing Shot', type: 'ranged', power: 28, cooldown: 1.4, range: 500 },
+        { key: 'E', name: 'Rain of Arrows', type: 'aoe', power: 40, cooldown: 10, radius: 140 },
+        { key: 'R', name: 'Snipe', type: 'ranged', power: 80, cooldown: 12, range: 700 }
+    ],
+    STAFF: [
+        { key: 'Q', name: 'Magic Bolt', type: 'damage', power: 22, cooldown: 1.0, magic: true },
+        { key: 'E', name: 'Heal', type: 'heal', power: 60, cooldown: 8 },
+        { key: 'R', name: 'Arcane Storm', type: 'aoe', power: 70, cooldown: 12, radius: 140, magic: true }
+    ],
+    AXE: [
+        { key: 'Q', name: 'Cleave', type: 'damage', power: 36, cooldown: 1.6, radius: 50 },
+        { key: 'E', name: 'Stomp', type: 'aoe', power: 55, cooldown: 9, radius: 100 },
+        { key: 'R', name: 'Berserk', type: 'buff', power: 0, cooldown: 14 }
+    ]
 };
 
-const WEAPON_TYPES = {
-    SHORT_SWORD: { name: 'Short Sword', damage: 15, speed: 1.0 },
-    LONG_SWORD: { name: 'Long Sword', damage: 25, speed: 1.2 },
-    KATANA: { name: 'Katana', damage: 28, speed: 1.3 },
-    SPEAR: { name: 'Spear', damage: 20, speed: 1.1 },
-    HALBERD: { name: 'Halberd', damage: 32, speed: 0.85 },
-    GAUNTLETS: { name: 'Gauntlets', damage: 12, speed: 0.9 },
-    BOW: { name: 'Bow', damage: 18, speed: 1.3 },
-    CROSSBOW: { name: 'Crossbow', damage: 24, speed: 1.1 },
-    AXE: { name: 'Axe', damage: 30, speed: 0.8 },
-    BATTLEAXE: { name: 'Battle Axe', damage: 36, speed: 0.7 },
-    SCYTHE: { name: 'Scythe', damage: 28, speed: 1.0 },
-    WARHAMMER: { name: 'War Hammer', damage: 35, speed: 0.7 },
-    DAGGER: { name: 'Dagger', damage: 10, speed: 1.5 },
-    MACE: { name: 'Mace', damage: 22, speed: 0.9 },
-    WHIP: { name: 'Whip', damage: 16, speed: 1.2 },
-    STAFF: { name: 'Staff', damage: 12, speed: 1.1, magic: true },
-    WAND: { name: 'Wand', damage: 10, speed: 1.6, magic: true },
-    SCEPTER: { name: 'Scepter', damage: 14, speed: 1.0, magic: true }
+const POSSIBLE_DROPS = [
+    { name: 'Herb', desc: 'A common herb used in crafting.', rarity: 0 },
+    { name: 'Metal Scrap', desc: 'Scrap metal useful for crafting weapons.', rarity: 0 },
+    { name: 'Mana Crystal', desc: 'Concentrated mana for casting spells.', rarity: 1 },
+    { name: 'Healing Potion', desc: 'Restores a moderate amount of health.', rarity: 1 },
+    { name: 'Rare Gem', desc: 'A precious gem used for high tier crafting.', rarity: 3 }
+];
+
+// Items dropped on the ground
+let itemsOnGround = [];
+
+// Class definitions (Tank, Healer, DPS, Rogue, Mage)
+const CLASS_DEFINITIONS = {
+    TANK: {
+        display: 'Tank',
+        description: 'Heavily armored frontliner who soaks damage and controls enemies.',
+        modifiers: { maxHealth: 70, armor: 12, magicPower: -5 },
+        preferredWeapons: ['HALBERD','WARHAMMER','BATTLEAXE','AXE'],
+        skillPool: [
+            { name: 'Heavy Armor', desc: 'Wear heavy armor to reduce incoming damage.' },
+            { name: 'Shield Bash', desc: 'Stun or interrupt nearby enemies.' },
+            { name: 'Taunt', desc: 'Force enemies to attack you.' },
+            { name: 'Fortitude', desc: 'Increase maximum health.' },
+            { name: 'Resilience', desc: 'Gain resistance to physical damage.' }
+        ]
+    },
+    HEALER: {
+        display: 'Healer',
+        description: 'Support caster who heals allies and protects them from harm.',
+        modifiers: { maxMana: 60, maxHealth: 10, magicPower: 10 },
+        preferredWeapons: ['STAFF','WAND','SCEPTER'],
+        skillPool: [
+            { name: 'Restoration', desc: 'Improves healing and mana regeneration.' },
+            { name: 'Heal', desc: 'Cast direct healing spells.' },
+            { name: 'Warding', desc: 'Temporary damage barriers.' },
+            { name: 'Herbalism', desc: 'Better potion yields and craftables.' },
+            { name: 'Holy Magic', desc: 'Increase restorative effects.' }
+        ]
+    },
+    DPS: {
+        display: 'DPS',
+        description: 'Focused on dealing high damage quickly with weapons or spells.',
+        modifiers: { magicPower: 0, maxHealth: 10, attackSpeed: 0.12 },
+        preferredWeapons: ['LONG_SWORD','KATANA','DAGGER','BATTLEAXE'],
+        skillPool: [
+            { name: 'One-Handed', desc: 'Specialize in one-handed weapons.' },
+            { name: 'Two-Handed', desc: 'Specialize in two-handed weapons.' },
+            { name: 'Cleave', desc: 'Deal damage to multiple nearby enemies.' },
+            { name: 'Critical Strike', desc: 'Chance to deal extra critical damage.' },
+            { name: 'Whirlwind', desc: 'Spin attack that hits nearby foes.' }
+        ]
+    },
+    ROGUE: {
+        display: 'Rogue',
+        description: 'Stealthy attacker that relies on agility, stealth, and precision.',
+        modifiers: { agility: 12, maxHealth: -5, criticalChance: 0.08 },
+        preferredWeapons: ['DAGGER','SHORT_SWORD','WHIP'],
+        skillPool: [
+            { name: 'Sneak', desc: 'Move quietly and avoid detection.' },
+            { name: 'Backstab', desc: 'Massively increased damage when attacking from stealth.' },
+            { name: 'Lockpicking', desc: 'Open locked chests and doors.' },
+            { name: 'Pickpocketing', desc: 'Steal small amounts of gold from enemies.' },
+            { name: 'Acrobatics', desc: 'Improve mobility and evasion.' }
+        ]
+    },
+    MAGE: {
+        display: 'Mage',
+        description: 'Master of the elements and arcane study, high magic power and versatility.',
+        modifiers: { magicPower: 25, maxMana: 50, maxHealth: -10 },
+        preferredWeapons: ['STAFF','WAND','SCEPTER'],
+        skillPool: [
+            { name: 'Destruction', desc: 'Increase damage for offensive spells.' },
+            { name: 'Conjuration', desc: 'Summon minions or temporary allies.' },
+            { name: 'Elemental Magic', desc: 'Enhance elemental abilities like fire and ice.' },
+            { name: 'Arcane Storm', desc: 'Large-area magical attack.' },
+            { name: 'Mysticism', desc: 'Improve mana efficiency and magic resistance.' }
+        ]
+    }
 };
 
-const PLAYER_RANKS = [
-    'F', 'E', 'D', 'C', 'B', 'A', 'S', 'SS', 'SSS', 'Z'
-];
+// Player class state
+player.className = null;
+player.unlockedClassSkills = [];
+player.appliedSkills = {};
 
-const TOWERS = [
-    { name: 'Tower of Shadows', floors: 5, difficulty: 1 },
-    { name: 'Crimson Peak', floors: 6, difficulty: 2 },
-    { name: 'Frozen Abyss', floors: 7, difficulty: 3 },
-    { name: 'Inferno Citadel', floors: 8, difficulty: 4 },
-    { name: 'Mystic Spire', floors: 9, difficulty: 5 },
-    { name: 'Draconic Sanctum', floors: 10, difficulty: 6 }
-];
+// Save data key
+const SAVE_KEY = 'shadow_rpg_save_v1';
 
-const ENEMY_TYPES = [
-    { name: 'Goblin', health: 20, damage: 5, exp: 30 },
-    { name: 'Orc', health: 40, damage: 10, exp: 60 },
-    { name: 'Skeleton', health: 35, damage: 8, exp: 50 },
-    { name: 'Zombie', health: 50, damage: 12, exp: 70 },
-    { name: 'Demon', health: 80, damage: 20, exp: 150 },
-    { name: 'Dragon', health: 200, damage: 40, exp: 500 }
-];
+function openClassSelect() {
+    const panel = document.getElementById('classSelectPanel');
+    if (panel) panel.style.display = 'block';
+}
+
+function closeClassSelect() {
+    const panel = document.getElementById('classSelectPanel');
+    if (panel) panel.style.display = 'none';
+}
+
+let _selectedClassKey = null;
+function showClassDetails(key) {
+    if (key === 'RANDOM') {
+        const keys = Object.keys(CLASS_DEFINITIONS);
+        key = keys[Math.floor(Math.random() * keys.length)];
+    }
+    _selectedClassKey = key;
+    const def = CLASS_DEFINITIONS[key];
+    const nameEl = document.getElementById('className');
+    const descEl = document.getElementById('classDesc');
+    if (nameEl) nameEl.textContent = def.display;
+    if (descEl) descEl.textContent = def.description + '\n' + 'Preferred weapons: ' + (def.preferredWeapons || []).join(', ');
+}
+
+function confirmClassSelection() {
+    if (!_selectedClassKey) return;
+    player.className = _selectedClassKey;
+    // apply class modifiers
+    const def = CLASS_DEFINITIONS[_selectedClassKey];
+    if (def && def.modifiers) {
+        if (def.modifiers.maxHealth) {
+            player.maxHealth += def.modifiers.maxHealth;
+            player.health = player.maxHealth;
+        }
+        if (def.modifiers.maxMana) {
+            player.maxMana += def.modifiers.maxMana;
+            player.mana = player.maxMana;
+        }
+        if (def.modifiers.magicPower) player.magicPower = (player.magicPower || 0) + def.modifiers.magicPower;
+        if (def.modifiers.armor) player.armor.defense = (player.armor.defense || 0) + def.modifiers.armor;
+        if (def.modifiers.agility) player.agility = (player.agility || 0) + def.modifiers.agility;
+    }
+
+    // pick some random starting class skills (3)
+    const pool = def.skillPool || [];
+    const chosen = [];
+    const picks = Math.min(3, pool.length);
+    const poolCopy = pool.slice();
+    for (let i = 0; i < picks; i++) {
+        const idx = Math.floor(Math.random() * poolCopy.length);
+        const s = poolCopy.splice(idx, 1)[0];
+        if (s) chosen.push(s.name);
+    }
+    player.unlockedClassSkills = chosen.slice();
+    for (let sName of player.unlockedClassSkills) applySkillEffects(sName);
+
+    closeClassSelect();
+    // open weapon selection next
+    openWeaponSelect();
+    updateSidebarUI();
+}
+
+function applySkillEffects(skillName) {
+    if (!skillName) return;
+    if (!player.appliedSkills) player.appliedSkills = {};
+    if (player.appliedSkills[skillName]) return; // already applied
+    player.appliedSkills[skillName] = true;
+    switch (skillName) {
+        case 'Heavy Armor':
+            player.armor.defense = (player.armor.defense || 0) + 12;
+            break;
+        case 'Light Armor':
+            player.armor.defense = (player.armor.defense || 0) + 4;
+            player.agility = (player.agility || 0) + 3;
+            break;
+        case 'Sneak':
+            player.sneak = true; player.backstabBonus = (player.backstabBonus || 1.5);
+            break;
+        case 'Backstab':
+            player.backstab = true; player.backstabMultiplier = 2.0;
+            break;
+        case 'Restoration':
+            player.manaRegenBonus = (player.manaRegenBonus || 0) + 0.4;
+            break;
+        case 'Destruction':
+            player.magicPower = (player.magicPower || 0) + 10;
+            break;
+        case 'Archery':
+            player.archeryBonus = (player.archeryBonus || 0) + 0.2;
+            break;
+        case 'One-Handed':
+            player.oneHanded = true;
+            break;
+        case 'Two-Handed':
+            player.twoHanded = true;
+            break;
+        case 'Critical Strike':
+            player.critChance = (player.critChance || 0) + 0.08;
+            break;
+        case 'Heal':
+            player.manaRegenBonus = (player.manaRegenBonus || 0) + 0.2;
+            break;
+        default:
+            // generic: no immediate effect, but can grant future mechanics
+            break;
+    }
+}
+
+function unlockClassSkill(skillName) {
+    if (!player.className) return false;
+    if (player.unlockedClassSkills && player.unlockedClassSkills.includes(skillName)) return false;
+    const cost = 100; // flat gold cost for now
+    if (player.gold < cost) return false;
+    player.gold -= cost;
+    player.unlockedClassSkills.push(skillName);
+    applySkillEffects(skillName);
+    saveGame();
+    updateSidebarUI();
+    return true;
+}
+
+function getWeaponKeyByName(name) {
+    for (let k of Object.keys(WEAPON_TYPES)) {
+        if (WEAPON_TYPES[k].name === name) return k;
+    }
+    return null;
+}
+
+function saveGame() {
+    try {
+        const save = {
+            timestamp: Date.now(),
+            player: {
+                x: player.x, y: player.y, health: player.health, maxHealth: player.maxHealth,
+                mana: player.mana, maxMana: player.maxMana, level: player.level, rank: player.rank,
+                experience: player.experience, experienceToNextRank: player.experienceToNextRank,
+                gold: player.gold, inventory: player.inventory, currentWeaponKey: getWeaponKeyByName(player.currentWeapon.name),
+                className: player.className, affinity: player.affinity, unlockedClassSkills: player.unlockedClassSkills || [], appliedSkills: player.appliedSkills || {}
+            },
+            enemies: enemies.map(e => ({ x: e.x, y: e.y, width: e.width, height: e.height, health: e.health, maxHealth: e.maxHealth, damage: e.damage, experience: e.experience, velocityX: e.velocityX, velocityY: e.velocityY, attackTimer: e.attackTimer, attackCooldown: e.attackCooldown, type: e.type && e.type.name })),
+            itemsOnGround: itemsOnGround,
+            gameState: gameState,
+            currentTowerIndex: currentTowerIndex,
+            currentFloor: currentFloor
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+        return true;
+    } catch (e) {
+        console.warn('Save failed', e);
+        return false;
+    }
+}
+
+function loadGame() {
+    try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+        const save = JSON.parse(raw);
+        if (!save || !save.player) return false;
+        const p = save.player;
+        player.x = p.x || player.x; player.y = p.y || player.y;
+        player.health = p.health || player.health; player.maxHealth = p.maxHealth || player.maxHealth;
+        player.mana = p.mana || player.mana; player.maxMana = p.maxMana || player.maxMana;
+        player.level = p.level || player.level; player.rank = p.rank || player.rank;
+        player.experience = p.experience || player.experience; player.experienceToNextRank = p.experienceToNextRank || player.experienceToNextRank;
+        player.gold = p.gold || player.gold; player.inventory = p.inventory || player.inventory;
+        player.className = p.className || player.className; player.affinity = p.affinity || player.affinity;
+        player.unlockedClassSkills = p.unlockedClassSkills || player.unlockedClassSkills || [];
+        player.appliedSkills = p.appliedSkills || player.appliedSkills || {};
+        if (p.currentWeaponKey && WEAPON_TYPES[p.currentWeaponKey]) player.currentWeapon = WEAPON_TYPES[p.currentWeaponKey];
+        // restore enemies
+        enemies = (save.enemies || []).map(e => ({ x: e.x, y: e.y, width: e.width, height: e.height, health: e.health, maxHealth: e.maxHealth, damage: e.damage, experience: e.experience, velocityX: e.velocityX, velocityY: e.velocityY, attackTimer: e.attackTimer, attackCooldown: e.attackCooldown, type: { name: e.type } }));
+        itemsOnGround = save.itemsOnGround || [];
+        gameState = save.gameState || gameState;
+        currentTowerIndex = save.currentTowerIndex || currentTowerIndex;
+        currentFloor = save.currentFloor || currentFloor;
+
+        // re-apply skill effects for unlocked class skills
+        for (let s of player.unlockedClassSkills || []) applySkillEffects(s);
+
+        return true;
+    } catch (e) {
+        console.warn('Load failed', e);
+        return false;
+    }
+}
+
+function resumeSavedGame() {
+    if (loadGame()) {
+        const overlay = document.getElementById('overlay'); if (overlay) overlay.style.display = 'none';
+        const panel = document.getElementById('classSelectPanel'); if (panel) panel.style.display = 'none';
+        const wpanel = document.getElementById('weaponSelectPanel'); if (wpanel) wpanel.style.display = 'none';
+        updateSidebarUI();
+    } else {
+        alert('No saved game found.');
+    }
+}
 
 // Game state
 let gameState = GAME_STATES.MAIN_MENU;
@@ -161,23 +423,32 @@ function handleKeyPress(key) {
     switch(key.toUpperCase()) {
         case 'ENTER':
             if (gameState === GAME_STATES.MAIN_MENU) {
-                gameState = GAME_STATES.TOWER_SELECTION;
+                openWeaponSelect();
             }
             break;
         case 'I':
-            gameState = GAME_STATES.INVENTORY;
+            toggleInventory();
             break;
         case 'G':
-            gameState = GAME_STATES.GUILD;
+            toggleGuild();
             break;
         case 'S':
-            gameState = GAME_STATES.SKILL_TREE;
+            toggleSkillTree();
             break;
         case 'C':
-            gameState = GAME_STATES.CRAFTING;
+            toggleCrafting();
             break;
         case 'ESCAPE':
-            gameState = GAME_STATES.MAIN_MENU;
+            // Close any open overlays first
+            if (typeof UISystem !== 'undefined') {
+                UISystem.inventory.isOpen = false;
+                UISystem.skillTree.isOpen = false;
+                UISystem.guild.isOpen = false;
+                UISystem.crafting.isOpen = false;
+                if (UISystem.stats) UISystem.stats.isOpen = false;
+            } else {
+                gameState = GAME_STATES.MAIN_MENU;
+            }
             break;
         case '1': case '2': case '3': case '4': case '5': case '6': case '7':
             if (gameState === GAME_STATES.TOWER_SELECTION) {
@@ -425,6 +696,218 @@ function castSkill(index) {
     }
 }
 
+// Perform a melee/ranged attack based on current weapon and facing
+function getWeaponRange(weapon) {
+    if (!weapon) return 80;
+    const n = (weapon.name || '').toLowerCase();
+    if (n.includes('spear') || n.includes('halberd')) return 140;
+    if (n.includes('bow') || n.includes('crossbow')) return 450;
+    if (n.includes('dagger')) return 60;
+    if (n.includes('staff') || weapon.magic) return 220;
+    return 90;
+}
+
+function performAttack() {
+    const weapon = player.currentWeapon || WEAPON_TYPES.LONG_SWORD;
+    const range = getWeaponRange(weapon);
+    const px = player.x + player.width / 2;
+    const py = player.y + player.height / 2;
+    for (let i = 0; i < enemies.length; i++) {
+        const e = enemies[i];
+        const ex = e.x + e.width / 2;
+        const ey = e.y + e.height / 2;
+        const dx = ex - px;
+        const dy = ey - py;
+        const dist2 = dx*dx + dy*dy;
+        if (dist2 <= range * range) {
+            // Optionally enforce frontal arc
+            const dir = player.attackDirection || { x: 1, y: 0 };
+            const dot = (dx * dir.x + dy * dir.y) / (Math.sqrt(dist2) || 1);
+            if (dot >= -0.2) { // allow hits in most directions; narrow if desired
+                const magicBonus = (weapon.magic ? (player.magicPower || 0) : 0);
+                let damage = Math.max(1, Math.floor((weapon.damage || 10) + (player.level || 1) * 2 + magicBonus));
+
+                // One/Two handed bonuses
+                const wname = (weapon.name || '').toLowerCase();
+                if (player.oneHanded && (wname.includes('sword') || wname.includes('dagger') || wname.includes('short'))) {
+                    damage += 6;
+                }
+                if (player.twoHanded && (wname.includes('axe') || wname.includes('battle') || wname.includes('hammer') || wname.includes('halberd'))) {
+                    damage += 10;
+                }
+
+                // Archery bonus
+                if ((wname.includes('bow') || wname.includes('crossbow')) && player.archeryBonus) {
+                    damage = Math.floor(damage * (1 + (player.archeryBonus || 0)));
+                }
+
+                // Critical chance
+                if (player.critChance && Math.random() < (player.critChance || 0)) {
+                    damage = Math.floor(damage * 1.8);
+                }
+
+                // Backstab: attacking from behind gives extra damage
+                if (player.backstab) {
+                    const dirNormLen = Math.sqrt(dir.x*dir.x + dir.y*dir.y) || 1;
+                    const dirNx = dir.x / dirNormLen; const dirNy = dir.y / dirNormLen;
+                    const toEnemyLen = Math.sqrt(dist2) || 1;
+                    const toEx = dx / toEnemyLen; const toEy = dy / toEnemyLen;
+                    const facingDot = dirNx * toEx + dirNy * toEy;
+                    if (facingDot < -0.4) {
+                        damage = Math.floor(damage * (player.backstabMultiplier || 2.0));
+                    }
+                }
+
+                e.health = Math.max(0, e.health - damage);
+            }
+        }
+    }
+}
+
+function spawnDrop(enemy) {
+    // 60% chance to drop something, rare gem small chance
+    const chance = Math.random();
+    if (chance < 0.1) {
+        // rare gem
+        const drop = POSSIBLE_DROPS.find(d => d.name === 'Rare Gem');
+        if (drop) itemsOnGround.push({ x: enemy.x, y: enemy.y, name: drop.name, desc: drop.desc, quantity: 1, rarity: drop.rarity });
+        return;
+    }
+    if (chance < 0.6) {
+        const idx = Math.floor(Math.random() * (POSSIBLE_DROPS.length - 1));
+        const drop = POSSIBLE_DROPS[idx];
+        if (drop) itemsOnGround.push({ x: enemy.x, y: enemy.y, name: drop.name, desc: drop.desc, quantity: 1, rarity: drop.rarity });
+    }
+}
+
+// Item interaction panels
+let _selectedGroundItem = null;
+function openItemPanel(index) {
+    const panel = document.getElementById('itemPanel');
+    const nameEl = document.getElementById('itemName');
+    const descEl = document.getElementById('itemDesc');
+    const pickupBtn = document.getElementById('pickupBtn');
+    if (!panel || !nameEl || !descEl || !pickupBtn) return;
+    const item = itemsOnGround[index];
+    if (!item) return;
+    _selectedGroundItem = index;
+    nameEl.textContent = item.name;
+    descEl.textContent = item.desc || 'An item.';
+    pickupBtn.onclick = function() { pickupSelectedItem(); };
+    panel.style.display = 'block';
+}
+
+function closeItemPanel() {
+    const panel = document.getElementById('itemPanel');
+    if (panel) panel.style.display = 'none';
+    _selectedGroundItem = null;
+}
+
+function pickupSelectedItem() {
+    if (_selectedGroundItem == null) return;
+    const item = itemsOnGround[_selectedGroundItem];
+    if (!item) return;
+    addToInventory({ name: item.name, quantity: item.quantity || 1, rarity: item.rarity || 0 });
+    // remove from ground
+    itemsOnGround.splice(_selectedGroundItem, 1);
+    updateSidebarUI();
+    closeItemPanel();
+}
+
+// Weapon selection and starting setup
+function openWeaponSelect() {
+    const panel = document.getElementById('weaponSelectPanel');
+    if (panel) panel.style.display = 'block';
+}
+
+function closeWeaponSelect() {
+    const panel = document.getElementById('weaponSelectPanel');
+    if (panel) panel.style.display = 'none';
+}
+
+function selectStartingWeapon(key) {
+    closeWeaponSelect();
+    let chosenKey = key;
+    if (key === 'RANDOM') {
+        const keys = Object.keys(WEAPON_TYPES);
+        chosenKey = keys[Math.floor(Math.random() * keys.length)];
+    }
+    const weaponObj = WEAPON_TYPES[chosenKey] || WEAPON_TYPES.LONG_SWORD;
+    player.currentWeapon = weaponObj;
+    // set attack cooldown from weapon speed
+    player.attackCooldown = 1.0 / (weaponObj.speed || 1.0);
+    // affinity chance
+    player.affinity = AFFINITIES[Math.floor(Math.random() * AFFINITIES.length)];
+    setSkillsForWeapon(chosenKey);
+    // close overlay and go to tower selection
+    const overlay = document.getElementById('overlay');
+    if (overlay) overlay.style.display = 'none';
+    gameState = GAME_STATES.TOWER_SELECTION;
+    updateSidebarUI();
+}
+
+function setSkillsForWeapon(weaponKey) {
+    const base = WEAPON_SKILLS_MAP[weaponKey] || WEAPON_SKILLS_MAP['LONG_SWORD'];
+    let combined = base.map(s => Object.assign({}, s));
+    // include unlocked class skills as additional abilities (non-keyed)
+    if (player.className && player.unlockedClassSkills && player.unlockedClassSkills.length > 0) {
+        const def = CLASS_DEFINITIONS[player.className];
+        if (def && def.skillPool) {
+            for (let skillDef of def.skillPool) {
+                if (player.unlockedClassSkills.includes(skillDef.name)) {
+                    combined.push({ name: skillDef.name, key: null, type: 'class', desc: skillDef.desc });
+                }
+            }
+        }
+    }
+    player.skills = combined;
+    // affinity modifies some skills randomly
+    for (let i = 0; i < player.skills.length; i++) {
+        const s = player.skills[i];
+        if (s.type === 'damage' || s.type === 'aoe') {
+            if (Math.random() < 0.4) {
+                s.name = s.name + ' (' + player.affinity + ')';
+                s.power = (s.power || 20) + 12;
+            }
+            if (s.magic && player.affinity === 'Arcane') {
+                s.power = (s.power || 20) + 10;
+            }
+        }
+    }
+}
+
+// Toggle UI helpers (safe if ui functions exist in ui.js)
+function toggleInventory() { if (typeof UISystem !== 'undefined') UISystem.inventory.isOpen = !UISystem.inventory.isOpen; else gameState = (gameState === GAME_STATES.INVENTORY) ? GAME_STATES.TOWER_FLOOR : GAME_STATES.INVENTORY; }
+function toggleSkillTree() { if (typeof UISystem !== 'undefined') UISystem.skillTree.isOpen = !UISystem.skillTree.isOpen; else gameState = (gameState === GAME_STATES.SKILL_TREE) ? GAME_STATES.TOWER_FLOOR : GAME_STATES.SKILL_TREE; }
+function toggleGuild() { if (typeof UISystem !== 'undefined') UISystem.guild.isOpen = !UISystem.guild.isOpen; else gameState = (gameState === GAME_STATES.GUILD) ? GAME_STATES.TOWER_FLOOR : GAME_STATES.GUILD; }
+function toggleCrafting() { if (typeof UISystem !== 'undefined') UISystem.crafting.isOpen = !UISystem.crafting.isOpen; else gameState = (gameState === GAME_STATES.CRAFTING) ? GAME_STATES.TOWER_FLOOR : GAME_STATES.CRAFTING; }
+
+// Canvas click picks up or inspects ground items
+canvas.addEventListener('click', function(evt) {
+    const pos = getCanvasPos(evt);
+    // Skill tree clickable areas (canvas-based buttons)
+    try {
+        if (typeof UISystem !== 'undefined' && UISystem.skillTree.isOpen && typeof _skillTreeClickableAreas !== 'undefined') {
+            for (let area of _skillTreeClickableAreas) {
+                if (pos.x >= area.x && pos.x <= area.x + area.w && pos.y >= area.y && pos.y <= area.y + area.h) {
+                    if (area.action === 'unlock') {
+                        unlockClassSkill(area.skillName);
+                    }
+                    return;
+                }
+            }
+        }
+    } catch (e) {}
+
+    for (let i = 0; i < itemsOnGround.length; i++) {
+        const it = itemsOnGround[i];
+        if (pos.x >= it.x && pos.x <= it.x + 18 && pos.y >= it.y && pos.y <= it.y + 18) {
+            openItemPanel(i);
+            return;
+        }
+    }
+});
+
 function render() {
     // Clear canvas
     ctx.fillStyle = '#000000';
@@ -456,6 +939,8 @@ function render() {
     
     // Render HUD
     renderHUD();
+    // Draw UI overlays (inventory, skill tree, guild, crafting, stats)
+    if (typeof drawAllUI === 'function') drawAllUI(ctx);
 }
 
 function renderMainMenu() {
@@ -517,6 +1002,14 @@ function renderTower() {
         ctx.fillStyle = '#ff0000';
         const healthWidth = (enemy.health / enemy.maxHealth) * barWidth;
         ctx.fillRect(enemy.x - 2, enemy.y - 10, healthWidth, barHeight);
+    }
+
+    // Render ground items (drops)
+    for (let it of itemsOnGround) {
+        ctx.fillStyle = it.rarity >= 3 ? '#ffd700' : '#ffaa00';
+        ctx.fillRect(it.x, it.y, 18, 18);
+        ctx.strokeStyle = '#000000';
+        ctx.strokeRect(it.x, it.y, 18, 18);
     }
     
     // Display floor info
@@ -712,7 +1205,7 @@ function fitCanvasToViewport() {
     canvas.style.margin = 'auto';
 }
 
-document.addEventListener('fullscreenchange', function() {
+const _onFullScreenChange = function() {
     const container = document.getElementById('gameContainer');
     const fsBtn = document.getElementById('nav-fullscreen');
     if (isFullscreen()) {
@@ -726,7 +1219,11 @@ document.addEventListener('fullscreenchange', function() {
         resizeCanvas();
         if (fsBtn) fsBtn.textContent = 'Fullscreen';
     }
-}, false);
+};
+
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange','msfullscreenchange'].forEach(ev => {
+    document.addEventListener(ev, _onFullScreenChange, false);
+});
 
 function closeTutorial() {
     var panel = document.getElementById('tutorialPanel');
@@ -745,5 +1242,17 @@ window.addEventListener('load', () => {
         fsBtn.addEventListener('click', function(e){ e.preventDefault(); toggleFullscreen(); });
     }
     window.addEventListener('resize', function() { if (isFullscreen()) fitCanvasToViewport(); else resizeCanvas(); });
+    // Show resume button if a save exists
+    try {
+        const resumeBtn = document.getElementById('resume-btn');
+        if (resumeBtn) {
+            if (localStorage.getItem(SAVE_KEY)) resumeBtn.style.display = 'inline-block'; else resumeBtn.style.display = 'none';
+        }
+    } catch (e) {}
+
+    // Auto-save every 10 seconds
+    setInterval(saveGame, 10000);
+    window.addEventListener('beforeunload', saveGame);
+
     gameLoop();
 });

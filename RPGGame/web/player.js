@@ -2,10 +2,19 @@
 
 function gainExperience(amount) {
     player.experience += amount;
-    
-    // Check for rank up
-    if (player.experience >= player.experienceToNextRank && player.rank < PLAYER_RANKS.length - 1) {
-        rankUp();
+    // Level up while reaching next threshold
+    while (player.experience >= player.experienceToNextRank) {
+        player.experience -= player.experienceToNextRank;
+        player.level = (player.level || 1) + 1;
+        player.maxHealth += 20;
+        player.health = player.maxHealth;
+        player.maxMana += 10;
+        player.mana = player.maxMana;
+        player.experienceToNextRank = Math.round(player.experienceToNextRank * 1.2);
+        // Optionally increase rank based on level thresholds
+        if (player.level % 5 === 0 && player.rank < PLAYER_RANKS.length - 1) {
+            player.rank++;
+        }
     }
 }
 

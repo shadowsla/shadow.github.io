@@ -12,6 +12,9 @@ const UISystem = {
     guild: {
         isOpen: false
     },
+    stats: {
+        isOpen: false
+    },
     crafting: {
         isOpen: false,
         recipes: [
@@ -50,6 +53,9 @@ const UISystem = {
         ]
     }
 };
+
+// clickable areas created by UI panels (used by canvas click handler)
+let _skillTreeClickableAreas = [];
 
 function canCraftRecipe(recipe) {
     for (let material of recipe.materials) {
@@ -167,10 +173,9 @@ function drawInventoryUI(ctx) {
 
 function drawSkillTreeUI(ctx) {
     if (!UISystem.skillTree.isOpen) return;
-    
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    
+
     ctx.fillStyle = '#1a1a2e';
     ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 2;
@@ -180,29 +185,55 @@ function drawSkillTreeUI(ctx) {
     const panelHeight = ctx.canvas.height - 60;
     ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
     ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
-    
+
     ctx.fillStyle = '#ffaa00';
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('SKILL TREE - ' + player.currentWeapon.name.toUpperCase(), 
-                  ctx.canvas.width / 2, panelY + 40);
-    
-    const skills = [
-        { name: 'Slash', desc: 'Basic Attack', damage: 1.0 },
-        { name: 'Heavy Strike', desc: 'Powerful Blow', damage: 1.5 },
-        { name: 'Whirlwind', desc: 'Spinning Attack', damage: 2.0 },
-        { name: 'Counterattack', desc: 'React to Enemies', damage: 1.2 },
-        { name: 'Berserk', desc: 'Massive Damage', damage: 3.0 }
-    ];
-    
+    ctx.fillText('SKILL TREE - ' + (player.className ? CLASS_DEFINITIONS[player.className].display : 'No Class Selected'), ctx.canvas.width / 2, panelY + 40);
+
     ctx.fillStyle = '#00ff00';
     ctx.font = '16px Arial';
     ctx.textAlign = 'left';
+
+    _skillTreeClickableAreas = [];
+
+    if (!player.className) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Choose a class first to view and unlock class-specific skills.', panelX + 40, panelY + 100);
+        return;
+    }
+
+    const def = CLASS_DEFINITIONS[player.className];
+    if (!def || !def.skillPool) return;
+
     let skillY = panelY + 100;
-    for (let skill of skills) {
-        ctx.fillText(skill.name + ' - ' + skill.desc + ' (' + skill.damage.toFixed(1) + 'x damage)', 
-                     panelX + 40, skillY);
-        skillY += 40;
+    for (let i = 0; i < def.skillPool.length; i++) {
+        const skill = def.skillPool[i];
+        const unlocked = player.unlockedClassSkills && player.unlockedClassSkills.includes(skill.name);
+        ctx.fillStyle = unlocked ? '#ffff00' : '#00ff00';
+        ctx.fillText(skill.name + (unlocked ? ' (Unlocked)' : ''), panelX + 40, skillY);
+        ctx.fillStyle = '#888888';
+        ctx.font = '14px Arial';
+        ctx.fillText(skill.desc, panelX + 40, skillY + 18);
+
+        // draw unlock button area
+        const btnX = panelX + panelWidth - 160;
+        const btnY = skillY - 12;
+        const btnW = 120;
+        const btnH = 28;
+        ctx.fillStyle = unlocked ? '#333333' : '#004411';
+        ctx.fillRect(btnX, btnY, btnW, btnH);
+        ctx.strokeStyle = '#00ff00'; ctx.strokeRect(btnX, btnY, btnW, btnH);
+        ctx.fillStyle = '#ffffff'; ctx.font = '14px Arial'; ctx.textAlign = 'center';
+        const btnText = unlocked ? 'Owned' : ('Unlock (100g)');
+        ctx.fillText(btnText, btnX + btnW/2, btnY + 18);
+
+        if (!unlocked) {
+            _skillTreeClickableAreas.push({ x: btnX, y: btnY, w: btnW, h: btnH, skillName: skill.name, action: 'unlock' });
+        }
+
+        skillY += 48;
+        ctx.font = '16px Arial'; ctx.textAlign = 'left';
     }
 }
 
@@ -292,6 +323,69 @@ function drawCraftingUI(ctx) {
     }
 }
 
+function toggleStatsPanel() {
+    UISystem.stats.isOpen = !UISystem.stats.isOpen;
+}
+
+function drawStatsUI(ctx) {
+    if (!UISystem.stats.isOpen) return;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    ctx.fillStyle = '#1a1a2e';
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+    const panelX = 120;
+    const panelY = 40;
+    const panelWidth = ctx.canvas.width - 240;
+    const panelHeight = ctx.canvas.height - 80;
+    ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+    ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
+
+    ctx.fillStyle = '#ffaa00';
+    ctx.font = 'bold 26px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('PLAYER STATS', ctx.canvas.width / 2, panelY + 44);
+
+    const stats = getPlayerStats();
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '18px Arial';
+    ctx.textAlign = 'left';
+    let y = panelY + 90;
+    ctx.fillText('Name: ' + stats.name, panelX + 30, y); y += 28;
+    ctx.fillText('Level: ' + stats.level + '  Rank: ' + stats.rank, panelX + 30, y); y += 28;
+    ctx.fillText('HP: ' + stats.health + '/' + stats.maxHealth, panelX + 30, y); y += 24;
+    ctx.fillText('Mana: ' + stats.mana + '/' + stats.maxMana, panelX + 30, y); y += 24;
+    ctx.fillText('Magic Power: ' + (stats.magicPower || 0), panelX + 30, y); y += 28;
+    ctx.fillText('Weapon: ' + stats.weapon + '  Sync: ' + stats.weaponSync + '%', panelX + 30, y); y += 28;
+    ctx.fillText('Gold: ' + stats.gold, panelX + 30, y); y += 36;
+
+    // EXP bar
+    const expX = panelX + 30;
+    const expY = y;
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(expX, expY, 400, 22);
+    ctx.fillStyle = '#00ff00';
+    const prog = Math.min(1, stats.experience / stats.nextRankExp);
+    ctx.fillRect(expX, expY, 400 * prog, 22);
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.strokeRect(expX, expY, 400, 22);
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.fillText('EXP: ' + Math.round(stats.experience) + ' / ' + stats.nextRankExp, expX + 8, expY + 16);
+    y += 46;
+
+    // Skills
+    ctx.fillStyle = '#ffaa00';
+    ctx.font = '20px Arial';
+    ctx.fillText('Skills', panelX + 30, y); y += 28;
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '16px Arial';
+    const skills = stats.skills || [];
+    for (let s of skills) {
+        ctx.fillText('- ' + s.name + ' (' + (s.key || '?') + ')', panelX + 40, y);
+        y += 22;
+    }
+}
+
 function getRarityName(rarity) {
     const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
     return rarities[Math.min(rarity, 4)];
@@ -302,4 +396,5 @@ function drawAllUI(ctx) {
     drawSkillTreeUI(ctx);
     drawGuildUI(ctx);
     drawCraftingUI(ctx);
+    drawStatsUI(ctx);
 }
