@@ -210,10 +210,19 @@
     <div id="notificationContainer" class="notification-container" aria-live="polite" aria-atomic="true"></div>
     <!-- Service worker registration for PWA support -->
     <script>
+        // Service worker: unregister during local development to avoid stale caches.
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-            .then(function(reg){ console.log('ServiceWorker registered:', reg.scope); })
-            .catch(function(err){ console.warn('ServiceWorker registration failed:', err); });
+            const hostname = location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+                // Unregister any existing SWs when developing locally
+                navigator.serviceWorker.getRegistrations().then(function(regs){
+                    regs.forEach(r => { r.unregister().then(function(){ console.log('Unregistered old service worker'); }); });
+                }).catch(() => {});
+            } else {
+                navigator.serviceWorker.register('sw.js')
+                .then(function(reg){ console.log('ServiceWorker registered:', reg.scope); })
+                .catch(function(err){ console.warn('ServiceWorker registration failed:', err); });
+            }
         }
     </script>
 

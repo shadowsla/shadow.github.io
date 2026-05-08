@@ -184,6 +184,24 @@ if (typeof TOWERS === 'undefined') {
     ];
 }
 
+// Update DOM tower list (sidebar) from TOWERS data
+function populateTowerList() {
+    try {
+        const list = document.getElementById('towerList');
+        if (!list) return;
+        list.innerHTML = '';
+        const rankMap = ['F','E','D','C','B','A','S'];
+        for (let i = 0; i < TOWERS.length; i++) {
+            const t = TOWERS[i];
+            const li = document.createElement('li');
+            const diff = Math.max(1, Math.round(t.difficulty || 1));
+            const rank = rankMap[Math.min(rankMap.length - 1, diff - 1)] || 'F';
+            li.textContent = (i + 1) + '. ' + (t.name || 'Unknown') + ' (' + rank + ')';
+            list.appendChild(li);
+        }
+    } catch (e) { console.warn('populateTowerList failed', e); }
+}
+
 if (typeof ENEMY_TYPES === 'undefined') {
     var ENEMY_TYPES = [
         { name: 'Goblin', health: 30, damage: 5, exp: 20 },
@@ -1711,6 +1729,8 @@ function closeTutorial() {
 window.addEventListener('load', async () => {
     // Load optional external JSON data (if served from web/data/)
     try { await loadExternalData(); } catch (e) { console.warn('loadExternalData failed', e); }
+    // Populate DOM with any data-driven lists (towers etc.)
+    try { populateTowerList(); } catch (e) { /* ignore */ }
     resizeCanvas();
     setupMobileControls();
     const fsBtn = document.getElementById('nav-fullscreen');
