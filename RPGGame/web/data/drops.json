@@ -1,0 +1,5 @@
+[
+  { "name": "Crystal Shard", "desc": "Small shard of crystal used for mid-tier crafting.", "rarity": 1 },
+  { "name": "Gilded Token", "desc": "A token used in guild offerings.", "rarity": 2 },
+  { "name": "Enchanted Thread", "desc": "Used to craft magical garments.", "rarity": 2 }
+]

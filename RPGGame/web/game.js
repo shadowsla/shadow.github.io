@@ -91,7 +91,7 @@ const WEAPON_SKILLS_MAP = {
     ]
 };
 
-const POSSIBLE_DROPS = [
+let POSSIBLE_DROPS = [
     { name: 'Herb', desc: 'A common herb used in crafting.', rarity: 0 },
     { name: 'Metal Scrap', desc: 'Scrap metal useful for crafting weapons.', rarity: 0 },
     { name: 'Mana Crystal', desc: 'Concentrated mana for casting spells.', rarity: 1 },
@@ -101,6 +101,76 @@ const POSSIBLE_DROPS = [
 
 // Items dropped on the ground
 let itemsOnGround = [];
+
+// Attempt to load optional external data (JSON files under data/)
+async function loadExternalData() {
+    async function fetchJSON(path) {
+        try {
+            const resp = await fetch(path, { cache: 'no-store' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return await resp.json();
+        } catch (e) {
+            console.warn('Failed to load', path, e);
+            return null;
+        }
+    }
+
+    // Load towers
+    const towers = await fetchJSON('data/towers.json');
+    if (Array.isArray(towers) && towers.length) {
+        try { TOWERS = towers; } catch (e) { console.warn('Could not set TOWERS', e); }
+    }
+
+    // Enemies
+    const enemies = await fetchJSON('data/enemies.json');
+    if (Array.isArray(enemies) && enemies.length) {
+        try { ENEMY_TYPES = enemies; } catch (e) { console.warn('Could not set ENEMY_TYPES', e); }
+    }
+
+    // Weapons (object mapping)
+    const weapons = await fetchJSON('data/weapons.json');
+    if (weapons && typeof weapons === 'object') {
+        try { WEAPON_TYPES = Object.assign({}, WEAPON_TYPES || {}, weapons); } catch (e) { console.warn('Could not merge WEAPON_TYPES', e); }
+    }
+
+    // Weapon skills map
+    const skills = await fetchJSON('data/skills.json');
+    if (skills && typeof skills === 'object') {
+        try { Object.assign(WEAPON_SKILLS_MAP, skills); } catch (e) { console.warn('Could not merge WEAPON_SKILLS_MAP', e); }
+    }
+
+    // Items / drops
+    const items = await fetchJSON('data/items.json');
+    if (Array.isArray(items) && items.length) {
+        try { POSSIBLE_DROPS = items; } catch (e) { console.warn('Could not set POSSIBLE_DROPS', e); }
+    }
+
+    // Crafting recipes
+    const crafting = await fetchJSON('data/crafting.json');
+    if (Array.isArray(crafting) && crafting.length) {
+        try { if (UISystem && UISystem.crafting) UISystem.crafting.recipes = crafting; } catch (e) { console.warn('Could not set crafting recipes', e); }
+    }
+
+    // Classes
+    const classes = await fetchJSON('data/classes.json');
+    if (classes && typeof classes === 'object') {
+        try { Object.assign(CLASS_DEFINITIONS, classes); } catch (e) { console.warn('Could not merge CLASS_DEFINITIONS', e); }
+    }
+
+    // Drops (generic)
+    const drops = await fetchJSON('data/drops.json');
+    if (Array.isArray(drops) && drops.length) {
+        try { POSSIBLE_DROPS = (POSSIBLE_DROPS || []).concat(drops); } catch (e) { console.warn('Could not merge drops', e); }
+    }
+
+    // Quests (optional) — attach to global if present
+    const quests = await fetchJSON('data/quests.json');
+    if (Array.isArray(quests) && quests.length) {
+        try { window.RPG_QUESTS = quests; } catch (e) { console.warn('Could not set quests', e); }
+    }
+
+    console.log('External data load complete (if available)');
+}
 
 // Fallback data (in case external data not provided)
 if (typeof TOWERS === 'undefined') {
@@ -1638,7 +1708,9 @@ function closeTutorial() {
 }
 
 // Start game loop
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+    // Load optional external JSON data (if served from web/data/)
+    try { await loadExternalData(); } catch (e) { console.warn('loadExternalData failed', e); }
     resizeCanvas();
     setupMobileControls();
     const fsBtn = document.getElementById('nav-fullscreen');

@@ -1,0 +1,14 @@
+[
+  { "name": "Herb", "desc": "A common herb used in crafting.", "rarity": 0 },
+  { "name": "Metal Scrap", "desc": "Scrap metal useful for crafting weapons.", "rarity": 0 },
+  { "name": "Coal", "desc": "Burnable coal used in forging.", "rarity": 0 },
+  { "name": "Leather", "desc": "Tough leather used for armor crafting.", "rarity": 0 },
+  { "name": "Water", "desc": "Pure water for alchemy.", "rarity": 0 },
+  { "name": "Mana Crystal", "desc": "Concentrated mana for casting spells.", "rarity": 1 },
+  { "name": "Healing Potion", "desc": "Restores a moderate amount of health.", "rarity": 1 },
+  { "name": "Mana Potion", "desc": "Restores mana.", "rarity": 1 },
+  { "name": "Rare Gem", "desc": "A precious gem used for high tier crafting.", "rarity": 3 },
+  { "name": "Epic Gem", "desc": "A potent gem for powerful enchantments.", "rarity": 4 },
+  { "name": "Legendary Token", "desc": "A token for legendary recipes.", "rarity": 4 },
+  { "name": "Anomaly Cache", "desc": "A strange cache dropped by anomalies.", "rarity": 3 }
+]

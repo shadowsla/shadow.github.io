@@ -1,0 +1,13 @@
+[
+  { "name": "Tower of Shadows", "floors": 100, "difficulty": 1 },
+  { "name": "Crimson Peak", "floors": 100, "difficulty": 2 },
+  { "name": "Frozen Abyss", "floors": 100, "difficulty": 3 },
+  { "name": "Inferno Citadel", "floors": 100, "difficulty": 4 },
+  { "name": "Mystic Spire", "floors": 100, "difficulty": 5 },
+  { "name": "Draconic Sanctum", "floors": 100, "difficulty": 6 },
+  { "name": "Obsidian Keep", "floors": 80, "difficulty": 5 },
+  { "name": "Sunken Vault", "floors": 60, "difficulty": 4 },
+  { "name": "Skyreach Pinnacle", "floors": 120, "difficulty": 7 },
+  { "name": "Ruined Cathedral", "floors": 50, "difficulty": 3 },
+  { "name": "Gloomfen", "floors": 40, "difficulty": 2 }
+]

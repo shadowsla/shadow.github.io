@@ -1,0 +1,67 @@
+{
+  "TANK": {
+    "display": "Tank",
+    "description": "Heavily armored frontliner who soaks damage and controls enemies.",
+    "modifiers": { "maxHealth": 70, "armor": 12, "magicPower": -5 },
+    "preferredWeapons": ["HALBERD","WARHAMMER","BATTLEAXE","AXE"],
+    "skillPool": [
+      { "name": "Heavy Armor", "desc": "Wear heavy armor to reduce incoming damage." },
+      { "name": "Shield Bash", "desc": "Stun or interrupt nearby enemies." },
+      { "name": "Taunt", "desc": "Force enemies to attack you." },
+      { "name": "Fortitude", "desc": "Increase maximum health." },
+      { "name": "Resilience", "desc": "Gain resistance to physical damage." }
+    ]
+  },
+  "HEALER": {
+    "display": "Healer",
+    "description": "Support caster who heals allies and protects them from harm.",
+    "modifiers": { "maxMana": 60, "maxHealth": 10, "magicPower": 10 },
+    "preferredWeapons": ["STAFF","WAND","SCEPTER"],
+    "skillPool": [
+      { "name": "Restoration", "desc": "Improves healing and mana regeneration." },
+      { "name": "Heal", "desc": "Cast direct healing spells." },
+      { "name": "Warding", "desc": "Temporary damage barriers." },
+      { "name": "Herbalism", "desc": "Better potion yields and craftables." },
+      { "name": "Holy Magic", "desc": "Increase restorative effects." }
+    ]
+  },
+  "DPS": {
+    "display": "DPS",
+    "description": "Focused on dealing high damage quickly with weapons or spells.",
+    "modifiers": { "magicPower": 0, "maxHealth": 10, "attackSpeed": 0.12 },
+    "preferredWeapons": ["LONG_SWORD","KATANA","DAGGER","BATTLEAXE"],
+    "skillPool": [
+      { "name": "One-Handed", "desc": "Specialize in one-handed weapons." },
+      { "name": "Two-Handed", "desc": "Specialize in two-handed weapons." },
+      { "name": "Cleave", "desc": "Deal damage to multiple nearby enemies." },
+      { "name": "Critical Strike", "desc": "Chance to deal extra critical damage." },
+      { "name": "Whirlwind", "desc": "Spin attack that hits nearby foes." }
+    ]
+  },
+  "ROGUE": {
+    "display": "Rogue",
+    "description": "Stealthy attacker that relies on agility, stealth, and precision.",
+    "modifiers": { "agility": 12, "maxHealth": -5, "criticalChance": 0.08 },
+    "preferredWeapons": ["DAGGER","SHORT_SWORD","WHIP"],
+    "skillPool": [
+      { "name": "Sneak", "desc": "Move quietly and avoid detection." },
+      { "name": "Backstab", "desc": "Massively increased damage when attacking from stealth." },
+      { "name": "Lockpicking", "desc": "Open locked chests and doors." },
+      { "name": "Pickpocketing", "desc": "Steal small amounts of gold from enemies." },
+      { "name": "Acrobatics", "desc": "Improve mobility and evasion." }
+    ]
+  },
+  "MAGE": {
+    "display": "Mage",
+    "description": "Master of the elements and arcane study, high magic power and versatility.",
+    "modifiers": { "magicPower": 25, "maxMana": 50, "maxHealth": -10 },
+    "preferredWeapons": ["STAFF","WAND","SCEPTER"],
+    "skillPool": [
+      { "name": "Destruction", "desc": "Increase damage for offensive spells." },
+      { "name": "Conjuration", "desc": "Summon minions or temporary allies." },
+      { "name": "Elemental Magic", "desc": "Enhance elemental abilities like fire and ice." },
+      { "name": "Arcane Storm", "desc": "Large-area magical attack." },
+      { "name": "Mysticism", "desc": "Improve mana efficiency and magic resistance." }
+    ]
+  }
+}

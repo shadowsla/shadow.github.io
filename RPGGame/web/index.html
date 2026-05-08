@@ -17,6 +17,10 @@
             <a href="#tutorial" id="nav-tutorial" class="navBtn">Tutorial</a>
             <a href="#" id="nav-fullscreen" class="navBtn">Fullscreen</a>
             <a href="#" id="nav-stats" class="navBtn">Stats</a>
+            <a href="#" id="nav-inventory" class="navBtn">Inventory</a>
+            <a href="#" id="nav-skilltree" class="navBtn">Skill Tree</a>
+            <a href="#" id="nav-crafting" class="navBtn">Crafting</a>
+            <a href="#" id="nav-guild" class="navBtn">Guild</a>
             <a href="#" id="nav-credits" class="navBtn">Credits</a>
         </nav>
     </header>
@@ -187,6 +191,12 @@
         document.getElementById('nav-tutorial').addEventListener('click', function(e){ e.preventDefault(); openTutorial(); });
         document.getElementById('nav-play').addEventListener('click', function(e){ e.preventDefault(); document.getElementById('overlay').style.display='none'; });
         document.getElementById('nav-stats').addEventListener('click', function(e){ e.preventDefault(); if (typeof toggleStatsPanel === 'function') toggleStatsPanel(); });
+        // New panel hooks — use safe callers in case modules load later
+        const safeCall = (fnName) => { return function(e){ e.preventDefault(); try { if (typeof window[fnName] === 'function') window[fnName](); else showNotification && showNotification(fnName + ' loading...', 'info', 1000); } catch(err) { console.warn(err); } }; };
+        const inv = document.getElementById('nav-inventory'); if (inv) inv.addEventListener('click', safeCall('openInventoryPanel'));
+        const st = document.getElementById('nav-skilltree'); if (st) st.addEventListener('click', safeCall('openSkillTreePanel'));
+        const cr = document.getElementById('nav-crafting'); if (cr) cr.addEventListener('click', safeCall('openCraftingPanel'));
+        const gu = document.getElementById('nav-guild'); if (gu) gu.addEventListener('click', safeCall('openGuildPanel'));
     </script>
 
     <script src="game.js"></script>

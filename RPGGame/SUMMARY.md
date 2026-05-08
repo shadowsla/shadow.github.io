@@ -398,6 +398,24 @@ Complete Tower → Rank Up → Try Harder Tower
 
 ### Gameplay Goals
 - ✅ 45+ hours of main content
+
+## ✅ Finalization (2026-05-08)
+- Completed remaining TODOs: integration/manual tests, documentation updates, and finalization of web content files.
+- Added `web/data/` JSON assets (towers, enemies, weapons, skills, items, crafting recipes, classes, drops, quests) to enable easy content expansion for the web version. Serve the `web/` folder over HTTP to allow the client to load these files.
+
+Quick smoke-test commands:
+```bash
+# Build desktop (creates ShadowRPG.jar)
+cd RPGGame
+./build.sh
+
+# Serve web assets and test in browser
+cd web
+python3 -m http.server 8000
+# open http://localhost:8000
+```
+
+If you'd like, I can also add a lightweight CI job that runs the build and a quick web smoke test automatically.
 - ✅ 100+ hours with sidecontent
 - ✅ Progression feels rewarding
 - ✅ Challenge scales appropriately

@@ -111,7 +111,18 @@ java -cp bin com.shadowrpg.core.Game
 
 ### Web Version
 
-Simply open `RPGGame/web/index.html` in a modern web browser (Chrome, Firefox, Safari, Edge).
+Simply open RPGGame/web/index.html in a modern web browser (Chrome, Firefox, Safari, Edge).
+
+Web Data: The web build now includes a `web/data/` folder with JSON content (towers, enemies, weapons, skills, items, crafting recipes, classes, drops, and quests). When the site is served via HTTP these files are fetched at startup to enrich gameplay; the client falls back to built-in defaults if the files are not available.
+
+To serve the web version (recommended):
+```bash
+cd RPGGame/web
+python3 -m http.server 8000
+# then open http://localhost:8000 in your browser
+```
+
+Note: Fetching JSON files requires serving `web/` over HTTP — opening the HTML file directly from the filesystem may block fetches in some browsers.
 
 **Browser Requirements:**
 - HTML5 Canvas support

@@ -1,0 +1,5 @@
+[
+  { "id": "q_collect_herbs", "title": "Gather Herbs", "desc": "Collect 10 Herbs for the village apothecary.", "rewards": { "gold": 100, "items": [{ "name": "Healing Potion", "quantity": 1 }] } },
+  { "id": "q_clear_floor_5", "title": "Clear Floor 5", "desc": "Defeat all enemies on Floor 5 of any tower.", "rewards": { "gold": 250, "items": [] } },
+  { "id": "q_find_fragment", "title": "Fragment Seeker", "desc": "Find a Chamber Fragment while exploring towers.", "rewards": { "gold": 500, "items": [{ "name": "Rare Gem", "quantity": 1 }] } }
+]
